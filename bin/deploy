@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+#
+# Prerequisites:
+#   - Pushing to the `production` remote triggers a deploy. This
+#     is easy if you've deployed to Heroku.
+#
+USAGE = """
+Usage:
+  bin/deploy production #=> deploys the master branch to production
+  bin/deploy production some-branch #=> deploys the specified branch to production
+  bin/deploy staging [some-branch] #=> deploys to staging
+""".freeze
+
+REMOTE_BRANCH = "master"
+LOCAL_DEFAULT = "master"
+target = ARGV[0]
+branch = ARGV[0] || LOCAL_DEFAULT
+
+def usage_and_exit
+  puts(USAGE)
+  exit(1)
+end
+
+usage_and_exit unless %w(staging production).include?(target)
+
+cmd = "git push #{target} #{branch}:#{REMOTE_BRANCH}"
+system cmd

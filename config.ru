@@ -1,0 +1,6 @@
+# frozen_string_literal: true
+require_relative "./config/boot.rb"
+require "letto/web_server"
+
+# Starting the Sinatra webserver
+run Letto::WebServer

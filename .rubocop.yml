@@ -1,0 +1,27 @@
+Style/DotPosition:
+  EnforcedStyle: trailing
+
+Metrics/LineLength:
+  Max: 120
+
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+
+Style/EmptyLinesAroundBody:
+  Enabled: false
+
+Style/EmptyLinesAroundBlockBody:
+  Enabled: false
+
+Style/EmptyLinesAroundClassBody:
+  Enabled: false
+
+Style/EmptyLinesAroundModuleBody:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+  Enabled: true

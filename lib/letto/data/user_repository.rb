@@ -5,16 +5,29 @@ module Letto
 
     # Handle users data
     class UserRepository
-      def create_user(uuid)
+
+      def self.create(username, access_token, access_token_secret, session_id)
         time = Time.now
-        row = { uuid: uuid, created_at: time, updated_at: time }
-        Data::Db::CLIENT.insert(row)
+        row = {
+          uuid: generate_uuid,
+          username: username,
+          access_token: access_token,
+          access_token_secret: access_token_secret,
+          session_id: session_id,
+          created_at: time,
+          updated_at: time
+        }
+        Db::CLIENT[:users].insert(row)
       end
 
-      def self.find_user(uuid)
-        return nil if uuid.nil?
-        user = Data::Db::CLIENT[:users].where("uuid = \'#{uuid}\'").first
+      def self.for_session_id(session_id)
+        return nil if session_id.nil?
+        user = Db::CLIENT[:users].where("session_id = \'#{session_id}\'").first
         user
+      end
+
+      def self.generate_uuid
+        SecureRandom.uuid
       end
     end
   end

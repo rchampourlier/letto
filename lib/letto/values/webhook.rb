@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module Letto
-  module ValueObjects
+  module Values
 
     # A value class to hold webhook request data.
     #
@@ -10,11 +10,12 @@ module Letto
       attr_reader :body
       attr_reader :headers
 
-      def self.with_request(request)
-        new extract_headers(request), extract_body(request)
+      def self.with_request(id, request)
+        new id, extract_headers(request), extract_body(request)
       end
 
-      def initialize(headers, body)
+      def initialize(id, headers, body)
+        @id = id
         @headers = headers
         @body = body
       end
@@ -32,6 +33,10 @@ module Letto
       def self.extract_body(request)
         request.body.rewind
         request.body.read
+      end
+
+      def to_s
+        "<Letto::Values::Webhook> #{{ headers: headers, body: body }.to_s}"
       end
     end
   end

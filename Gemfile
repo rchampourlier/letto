@@ -22,6 +22,9 @@ gem "oauth"
 gem "slack-ruby-bot"
 gem "ruby-trello"
 
+# Ruby sugar
+gem "activesupport"
+
 group :development do
   gem "guard"
   gem "guard-rspec", require: false

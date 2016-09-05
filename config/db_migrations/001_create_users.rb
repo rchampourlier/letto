@@ -5,8 +5,10 @@ Sequel.migration do
   up do
     create_table :users do
       String :uuid, primary_key: true
-      String :oauth_token
-      String :oauth_token_secret
+      String :username, null: false
+      String :access_token
+      String :access_token_secret
+      String :session_id
       DateTime :created_at, null: false
       DateTime :updated_at, null: false
     end

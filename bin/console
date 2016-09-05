@@ -3,9 +3,6 @@
 require_relative "../config/boot"
 
 Dir[File.expand_path("../../lib/letto/**/*.rb", __FILE__)].each do |f|
-  # Ignoring /web/webhooks/**/*.rb because they get autoloaded
-  # by /web/webhooks.rb.
-  next if f =~ %r{/web/webhooks/}
   require f
 end
 

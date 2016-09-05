@@ -1,23 +1,20 @@
 # frozen_string_literal: true
 require "sinatra/base"
 require "sinatra/namespace"
-require "sinatra_auth/trello"
-require "trello"
+require "auth"
 require "data/user_repository"
-
-HOST = ENV["HOST"]
+require "values/webhook"
+require "trello_client"
 
 module Letto
+  AUTH_CALLBACK_URL = "#{ENV['HOST']}/connection/callback"
+  INCOMING_WEBHOOK_URL = "#{ENV['HOST']}/incoming_webhook"
 
   # Web app module providing web endpoints:
   #   - root (/) with status JSON response,
   #   - webhooks.
   #
   # Webhooks are defined in /triggers/webhooks.
-  #
-  # TECHNICAL-DEBT: using default cookie-sessions is a vulnerability
-  #   since the session will contain OAuth tokens. They should be
-  #   stored in a more secure place.
   class WebServer < Sinatra::Base
     register Sinatra::Namespace
     use Rack::Session::Cookie,
@@ -27,74 +24,80 @@ module Letto
 
     set :show_exceptions, false if ENV["RACK_ENV"] == "test"
 
+    attr_reader :auth
+
     before do
-      session[:uuid] ||= SecureRandom.uuid
-      @consumer = SinatraAuth::Trello.consumer(
-        ENV["TRELLO_CONSUMER_KEY"],
-        ENV["TRELLO_CONSUMER_SECRET"],
-        "Letto"
+      @auth = Auth.new(session, AUTH_CALLBACK_URL)
+      @user = Data::UserRepository.for_session_id(session[:session_id])
+    end
+
+    def trello_client
+      @trello_client ||= TrelloClient.new(auth.access_token, auth.access_token_secret)
+    end
+
+    get "/connection" do
+      redirect auth.authorize_url
+    end
+
+    get "/connection/callback" do
+      auth.retrieve_access_token(params)
+      username = trello_client.username
+      Data::UserRepository.create(
+        username,
+        auth.access_token,
+        auth.access_token_secret,
+        session["session_id"]
       )
-      @user = Letto::Data::UserRepository.find_user(session[:uuid])
-      if !session[:oauth][:request_token].nil? && !session[:oauth][:request_token_secret].nil?
-        @request_token = OAuth::RequestToken.new(@consumer, session[:oauth][:request_token], session[:oauth][:request_token_secret])
-      end
-
-      if !session[:oauth][:access_token].nil? && !session[:oauth][:access_token_secret].nil?
-        @access_token = OAuth::AccessToken.new(@consumer, session[:oauth][:access_token], session[:oauth][:access_token_secret])
-      end
+      redirect "/"
     end
 
-    get "/auth" do
-      if @access_token
-        erb :auth_connected
-      else
-        erb :auth_not_connected
-      end
+    get "/connection/destroy" do
+      # TODO
+      redirect "/"
     end
 
-    get "/auth/request" do
-      @request_token = @consumer.get_request_token(oauth_callback: "#{HOST}/auth/callback")
-      session[:oauth][:request_token] = @request_token.token
-      session[:oauth][:request_token_secret] = @request_token.secret
-      authorize_url = @request_token.authorize_url + "&name=Letto"
-      redirect authorize_url
-    end
-
-    get "/auth/callback" do
-      @access_token = @request_token.get_access_token oauth_verifier: params[:oauth_verifier]
-      session[:oauth][:access_token] = @access_token.token
-      session[:oauth][:access_token_secret] = @access_token.secret
-      redirect "/auth"
-    end
-
-    get "/auth/logout" do
-      session[:oauth] = {}
-      redirect "/auth"
-    end
-
-    get "/trello" do
-      Trello.configure do |config|
-        config.developer_public_key = ENV["TRELLO_CONSUMER_KEY"]
-        config.member_token = session[:oauth][:access_token]
-      end
-      me = Trello::Member.find("me")
+    get "/logout" do
+      # TODO
     end
 
     get "/" do
-      { status: "ok" }.to_json
+      @username = @user[:username] if @user
+      erb :home
     end
 
-    # Extends the Letto::Web Sinatra app to handle webhook endpoints. These are defined in /triggers/webhooks.
-    get "/webhook" do
-      handle_webhook(request)
+    get "/boards" do
+      @organizations = trello_client.organizations.map(&:attributes)
+      all_boards = trello_client.boards.map(&:attributes)
+      @boards = all_boards.select { |b| b[:closed] == false }
+      erb :boards
     end
 
-    post "/webhook" do
-      handle_webhook(request)
+    get "/boards/:board_id/create_webhook" do
+      board_id = params[:board_id]
+      trello_client.create_webhook(board_id, INCOMING_WEBHOOK_URL)
+      redirect "/webhooks"
     end
 
-    def handle_webhook(request)
-      webhook_value = Letto::ValueObjects::Webhook.with_request(request)
+    get "/webhooks" do
+      @webhooks = trello_client.webhooks.map(&:attributes)
+      erb :webhooks
+    end
+
+    head "/incoming_webhook/:webhook_id" do
+      handle_incoming_webhook(params[:webhook_id], request)
+    end
+
+    get "/incoming_webhook/:webhook_id" do
+      handle_incoming_webhook(params[:webhook_id], request)
+    end
+
+    post "/incoming_webhook/:webhook_id" do
+      handle_incoming_webhook(params[:webhook_id], request)
+    end
+
+    def handle_incoming_webhook(id, request)
+      webhook = Letto::Values::Webhook.with_request(id, request)
+      puts(webhook)
       { status: "ok" }.to_json
     end
   end

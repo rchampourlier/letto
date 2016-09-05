@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Letto | Webhooks</title>
+  </head>
+  <body>
+    <h1>Webhooks</h1>
+    <% if @webhooks.any? %>
+      <ul>
+        <% @webhooks.each do |webhook| %>
+          <li><%= webhook[:description] %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>No webhooks configured yet</p>
+    <% end %>
+  </body>
+</html>

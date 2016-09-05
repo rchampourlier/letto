@@ -193,6 +193,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  activesupport
   awesome_print
   coveralls
   dotenv

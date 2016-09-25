@@ -10,13 +10,7 @@ LET's auTOmate!
 
 ## How to use
 
-### Open a console locally
-
-```
-bin/console
-```
-
-### Start in development
+### Ngrok
 
 In development, to perform OAuth handshake with Trello, you will need
 to publish your local server. You may use ngrok for this.
@@ -25,9 +19,22 @@ to publish your local server. You may use ngrok for this.
 ngrok http 9292
 ```
 
-To start your development server, you may just use guard:
+### Walkthrough
 
 ```
+# Start dependencies (PostgreSQL) through Docker
+docker-compose up -d
+
+# Run migrations
+bin/db/migrate
+
+# Reset the database
+bin/db/reset
+
+# Open a console
+bin/console
+
+# Start a development server
 guard
 ```
 

@@ -13,6 +13,12 @@ module Letto
           remote_id: remote_id
         )
       end
+
+      def self.remove(remote_id)
+        delete(
+          :remote_id => remote_id
+        )
+      end
     end
   end
 end

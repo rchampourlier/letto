@@ -28,6 +28,10 @@ module Letto
         table.insert row(data)
       end
 
+      def self.delete(where_data)
+        table.where(where_data).delete
+      end
+
       def self.table
         repository_resource = name.split("::").last.gsub(/Repository\Z/, "")
         db[repository_resource.pluralize.underscore.to_sym]

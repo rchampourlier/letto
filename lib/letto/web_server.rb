@@ -3,6 +3,7 @@ require "sinatra/base"
 require "sinatra/namespace"
 require "auth"
 require "data/user_repository"
+require "data/incoming_webhook_repository"
 require "values/webhook"
 require "trello_client"
 
@@ -65,22 +66,39 @@ module Letto
       erb :home
     end
 
-    get "/boards" do
-      @organizations = trello_client.organizations.map(&:attributes)
-      all_boards = trello_client.boards.map(&:attributes)
-      @boards = all_boards.select { |b| b[:closed] == false }
-      erb :boards
+    namespace "/trello" do
+      get "/boards" do
+        @organizations = trello_client.organizations.map(&:attributes)
+        all_boards = trello_client.boards.map(&:attributes)
+        @boards = all_boards.select { |board| board[:closed] == false }
+        @create_webhook_urls = @boards.map do |board|
+          "/trello/boards/#{board[:id]}/create_webhook?board_name=#{board[:name]}"
+        end
+        erb :trello_boards
+      end
+
+      get "/boards/:board_id/create_webhook" do
+        board_id = params[:board_id]
+        board_name = params[:board_name]
+        description = "Trello webhook on board \"#{board_name}\""
+        trello_webhook_id = trello_client.create_board_webhook(
+          board_id,
+          INCOMING_WEBHOOK_URL,
+          description
+        )
+        Data::IncomingWebhookRepository.create(description, trello_webhook_id)
+        redirect "/trello/webhooks"
+      end
+
+      get "/webhooks" do
+        @webhooks = trello_client.webhooks.map(&:attributes)
+        erb :trello_webhooks
+      end
     end
 
-    get "/boards/:board_id/create_webhook" do
-      board_id = params[:board_id]
-      trello_client.create_webhook(board_id, INCOMING_WEBHOOK_URL)
-      redirect "/webhooks"
-    end
-
-    get "/webhooks" do
-      @webhooks = trello_client.webhooks.map(&:attributes)
-      erb :webhooks
+    get "/incoming_webhooks" do
+      @incoming_webhooks = Data::IncomingWebhookRepository.index
+      erb :incoming_webhooks
     end
 
     head "/incoming_webhook/:webhook_id" do

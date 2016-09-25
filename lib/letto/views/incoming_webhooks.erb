@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Letto | Incoming webhooks</title>
+  </head>
+  <body>
+    <h1>Incoming webhooks</h1>
+    <% if @incoming_webhooks.any? %>
+      <ul>
+        <% @incoming_webhooks.each do |webhook| %>
+          <li><%= webhook[:description] %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>No incoming webhooks configured yet</p>
+    <% end %>
+  </body>
+</html>

@@ -11,11 +11,11 @@
         <li>
           <b><%= organization[:display_name] %></b>
           <table>
-            <% @boards.each do |board| %>
+            <% @boards.zip(@create_webhook_urls).each do |board, url| %>
               <% if board[:organization_id] == organization[:id] %>
                 <tr>
                   <td><%= board[:name] %> (<%= board[:id] %>)</td>
-                  <td><a href="/boards/<%= board[:id] %>/create_webhook">Create webhook</a>
+                  <td><a href="<%= url %>">Create webhook</a>
                 </tr>
               <% end %>
             <% end %>

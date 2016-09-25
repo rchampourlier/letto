@@ -45,17 +45,16 @@ module Letto
       )
     end
 
-    def create_webhook(model_id, callback_url)
+    # @return [String] Trello create webhook's id
+    def create_board_webhook(board_id, callback_url, description)
       webhook_id = SecureRandom.uuid
       trello_webhook = client.create(
         :webhook,
-        "description" => "webhook on board #{model_id}",
-        "idModel" => model_id,
+        "description" => description,
+        "idModel" => board_id,
         "callbackURL" => [callback_url, webhook_id].join("/")
       )
-      trello_webhook_id = trello_webhook.attributes[:id]
-      puts(webhook_id)
-      puts(trello_webhook_id)
+      trello_webhook.attributes[:id]
     end
 
     def delete_webhook(webhook_id)

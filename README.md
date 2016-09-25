@@ -36,6 +36,9 @@ bin/console
 
 # Start a development server
 guard
+
+# Or directly with rackup
+rackup
 ```
 
 ### Deploy to Heroku

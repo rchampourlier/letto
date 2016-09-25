@@ -16,6 +16,21 @@ LET's auTOmate!
 bin/console
 ```
 
+### Start in development
+
+In development, to perform OAuth handshake with Trello, you will need
+to publish your local server. You may use ngrok for this.
+
+```
+ngrok http 9292
+```
+
+To start your development server, you may just use guard:
+
+```
+guard
+```
+
 ### Deploy to Heroku
 
 ```sh

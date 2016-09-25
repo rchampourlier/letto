@@ -25,6 +25,10 @@ ngrok http 9292
 # Start dependencies (PostgreSQL) through Docker
 docker-compose up -d
 
+# Ruby environment setup
+gem install bundler
+bundle install
+
 # Run migrations
 bin/db/migrate
 

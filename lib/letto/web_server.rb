@@ -90,8 +90,20 @@ module Letto
         redirect "/trello/webhooks"
       end
 
+      get "/webhooks/delete_webhook/:webhook_id" do
+        webhook_id = params[:webhook_id]
+        trello_client.delete_webhook(
+          webhook_id
+        )
+        Data::IncomingWebhookRepository.delete_with_id(webhook_id)
+        redirect "/trello/webhooks"
+      end
+
       get "/webhooks" do
         @webhooks = trello_client.webhooks.map(&:attributes)
+        @delete_webhook_urls = @webhooks.map do |webhooks|
+          "/trello/webhooks/delete_webhook/#{webhooks[:id]}"
+        end
         erb :trello_webhooks
       end
     end

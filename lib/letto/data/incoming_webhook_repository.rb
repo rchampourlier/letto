@@ -13,6 +13,12 @@ module Letto
           remote_id: remote_id
         )
       end
+
+      def self.delete_with_id(remote_id)
+        delete(
+          remote_id: remote_id
+        )
+      end
     end
   end
 end

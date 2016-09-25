@@ -8,8 +8,8 @@
     <h1>Webhooks</h1>
     <% if @webhooks.any? %>
       <ul>
-        <% @webhooks.each do |webhook| %>
-          <li><%= webhook[:description] %></li>
+        <% @webhooks.zip(@delete_webhook_urls).each do |webhook, url| %>
+          <li><%= webhook[:description] %> <a href="<%= url %>">Delete webhook</a></li>
         <% end %>
       </ul>
     <% else %>

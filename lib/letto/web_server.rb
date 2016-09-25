@@ -95,7 +95,7 @@ module Letto
         trello_client.delete_webhook(
           webhook_id
         )
-        Data::IncomingWebhookRepository.remove(webhook_id)
+        Data::IncomingWebhookRepository.delete_with_id(webhook_id)
         redirect "/trello/webhooks"
       end
 

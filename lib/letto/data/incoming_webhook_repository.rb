@@ -14,9 +14,9 @@ module Letto
         )
       end
 
-      def self.remove(remote_id)
+      def self.delete_with_id(remote_id)
         delete(
-          :remote_id => remote_id
+          remote_id: remote_id
         )
       end
     end

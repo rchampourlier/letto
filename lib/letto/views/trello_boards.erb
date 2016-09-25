@@ -8,17 +8,17 @@
     <i><a href="/">Back to Home Page</a></i>
     <h1>Boards</h1>
     <ul>
-      <% @organizations.each do |organization| %>
+      <% @all_organizations.each do |organization_id, boards| %>
         <li>
-          <b><%= organization[:display_name] %></b>
+          <% matching_organization =  @organizations.find{|organization| organization[:id] == organization_id } %>
+          <b><%= matching_organization ? matching_organization[:display_name] : organization_id %></b>
           <table>
-            <% @boards.zip(@create_webhook_urls).each do |board, url| %>
-              <% if board[:organization_id] == organization[:id] %>
+            <% boards.each do |infos| %>
+              <% board, url = infos %>
                 <tr>
                   <td><%= board[:name] %> (<%= board[:id] %>)</td>
                   <td><a href="<%= url %>">Create webhook</a>
                 </tr>
-              <% end %>
             <% end %>
           </table>
         </li>

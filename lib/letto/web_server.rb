@@ -68,17 +68,19 @@ module Letto
 
     namespace "/trello" do
       get "/boards" do
-        @organizations = trello_client.organizations.map(&:attributes)
-        @organizations.push({display_name: "No Team", id: nil})
+        organizations = trello_client.organizations.map(&:attributes)
+        organizations.push(display_name: "No Team", id: nil)
         all_boards = trello_client.boards.map(&:attributes)
-        @boards = all_boards.select { |board| board[:closed] == false }
-        @all_organizations = @boards.each_with_object({}) do |board, hash| 
-          hash[board[:organization_id]] ||= [] 
-          hash[board[:organization_id]].push([board, "/trello/boards/#{board[:id]}/create_webhook?board_name=#{board[:name]}"])
-        end
-        puts(@all_organizations)
-        @create_webhook_urls = @boards.map do |board|
-          "/trello/boards/#{board[:id]}/create_webhook?board_name=#{board[:name]}"
+        boards = all_boards.select { |board| board[:closed] == false }
+        @organizations = boards.each_with_object({}) do |board, hash|
+          organization_id = board[:organization_id]
+          matching_organization = organizations.find { |organization| organization[:id] == organization_id }
+          hash[organization_id] ||= {
+            display_name: matching_organization ? matching_organization[:display_name] : organization_id,
+            boards: []
+          }
+          create_webhook_url = "/trello/boards/#{board[:id]}/create_webhook?board_name=#{board[:name]}"
+          hash[organization_id][:boards].push([board, create_webhook_url])
         end
         erb :trello_boards
       end

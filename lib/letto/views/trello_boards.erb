@@ -8,13 +8,12 @@
     <i><a href="/">Back to Home Page</a></i>
     <h1>Boards</h1>
     <ul>
-      <% @all_organizations.each do |organization_id, boards| %>
+      <% @organizations.each do |organization_id, organization_info| %>
         <li>
-          <% matching_organization =  @organizations.find{|organization| organization[:id] == organization_id } %>
-          <b><%= matching_organization ? matching_organization[:display_name] : organization_id %></b>
+          <b><%= organization_info[:display_name] %></b>
           <table>
-            <% boards.each do |infos| %>
-              <% board, url = infos %>
+            <% organization_info[:boards].each do |board_infos| %>
+              <% board, url = board_infos %>
                 <tr>
                   <td><%= board[:name] %> (<%= board[:id] %>)</td>
                   <td><a href="<%= url %>">Create webhook</a>

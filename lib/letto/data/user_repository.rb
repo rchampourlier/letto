@@ -23,6 +23,11 @@ module Letto
         user = db[:users].where("session_id = \'#{session_id}\'").first
         user
       end
+
+      def self.all()
+        db[:users]
+      end
+
     end
   end
 end

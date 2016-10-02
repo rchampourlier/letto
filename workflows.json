@@ -2,8 +2,13 @@
   "workflows": [
     {
       "name": "setDueDateOnLabelChange",
-      "webhook_id": "957fd7f6-4472-453c-9f90-1fe785847645",
       "conditions": [
+        {
+          "type": "string_comparison",
+          "target": "payload",
+          "path": "model.id",
+          "value": "57af3d3bf86d0a23b57b3ace"
+        },
         {
           "type": "string_comparison",
           "target": "payload",

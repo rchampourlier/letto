@@ -3,10 +3,10 @@ require "sinatra/base"
 require "sinatra/namespace"
 require "auth"
 require "data/user_repository"
-require "data/incoming_webhook_repository"
 require "values/webhook"
 require "trello_client"
 require "runner"
+require "users_webhooks_cache"
 
 module Letto
   AUTH_CALLBACK_URL = "#{ENV['HOST']}/connection/callback"
@@ -25,6 +25,7 @@ module Letto
       secret: ENV["SESSION_SECRET"]
 
     set :show_exceptions, false if ENV["RACK_ENV"] == "test"
+    UsersWebhooksCache.load(webhook_url_root: INCOMING_WEBHOOK_URL)
 
     attr_reader :auth
 
@@ -95,7 +96,6 @@ module Letto
           INCOMING_WEBHOOK_URL,
           description
         )
-        Data::IncomingWebhookRepository.create(description, trello_webhook_id)
         redirect "/trello/webhooks"
       end
 
@@ -104,7 +104,6 @@ module Letto
         trello_client.delete_webhook(
           webhook_id
         )
-        Data::IncomingWebhookRepository.delete_with_id(webhook_id)
         redirect "/trello/webhooks"
       end
 
@@ -115,11 +114,6 @@ module Letto
         end
         erb :trello_webhooks
       end
-    end
-
-    get "/incoming_webhooks" do
-      @incoming_webhooks = Data::IncomingWebhookRepository.index
-      erb :incoming_webhooks
     end
 
     head "/incoming_webhook/:webhook_id" do
@@ -137,7 +131,7 @@ module Letto
     def handle_incoming_webhook(webhook_id, request)
       webhook = Letto::Values::Webhook.with_request(webhook_id, request)
       write_webhook(webhook)
-      Runner.new(config).handle_webhook(webhook)
+      Runner.new(config, UsersWebhooksCache).handle_webhook(webhook)
       { status: "ok" }.to_json
     end
 

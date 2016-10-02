@@ -4,11 +4,13 @@ module Letto
   # The runner
   class Runner
     attr_reader :config
+    attr_reader :users_webhooks_cache
     SUPPORTED_NODE_TYPES = %w(expression operation value target payload).freeze
     SUPPORTED_FUNCTION_NAMES = %w(add api_call map min).freeze
 
-    def initialize(config)
+    def initialize(config, users_webhooks_cache)
       @config = config
+      @users_webhooks_cache = users_webhooks_cache
     end
 
     def handle_webhook(webhook)
@@ -18,21 +20,14 @@ module Letto
     end
 
     def matching_workflows(webhook)
-      matching_workflows = filter_workflows_on_webhook_id(workflows, webhook.id)
-      filter_workflows_on_conditions(matching_workflows, webhook)
+      filter_workflows_on_conditions(workflows, webhook)
     end
 
     def execute_action(action, webhook)
-      evaluate_node(action, webhook.parsed_body)
+      evaluate_node(action, webhook.parsed_body, webhook.id)
     end
 
     private
-
-    def filter_workflows_on_webhook_id(workflows, webhook_id)
-      workflows.select do |workflow|
-        workflow["webhook_id"] == webhook_id
-      end
-    end
 
     def filter_workflows_on_conditions(workflows, webhook)
       workflows.select { |w| verifies_workflow_conditions(w, webhook) }
@@ -64,7 +59,7 @@ module Letto
       raise "Unknown function name: #{function_name}"
     end
 
-    def evaluate_target(node, data)
+    def evaluate_target(node, data, _webhook_id = nil)
       raw_target = node["value"]
       re = /{{(.*)}}/
       expression = raw_target[re, 1].strip
@@ -72,53 +67,54 @@ module Letto
       raw_target.gsub(re, evaluated_expression)
     end
 
-    def evaluate_payload(node, data)
+    def evaluate_payload(node, data, webhook_id = nil)
       payload = node["value"]
       payload.each_with_object({}) do |(argument, node), evaluated_args|
-        evaluated_args[argument] = evaluate_node(node, data)
+        evaluated_args[argument] = evaluate_node(node, data, webhook_id)
       end
     end
 
-    def evaluate_node(node, data)
+    def evaluate_node(node, data, webhook_id)
       node_type = node["type"]
       verify_supported_node_type!(node_type)
-      send(:"evaluate_#{node_type}", node, data)
+      send(:"evaluate_#{node_type}", node, data, webhook_id)
     end
 
-    def evaluate_expression(node, data)
+    def evaluate_expression(node, data, _webhook_id = nil)
       data.dig(*node["value"].split("."))
     end
 
-    def evaluate_operation(node, data)
-      evaluated_arguments = node["arguments"].map { |a| evaluate_node(a, data) }
-      apply_function(node["function"], evaluated_arguments, data)
+    def evaluate_operation(node, data, webhook_id)
+      evaluated_arguments = node["arguments"].map { |a| evaluate_node(a, data, webhook_id) }
+      apply_function(node["function"], evaluated_arguments, data, webhook_id)
     end
 
-    def evaluate_value(node, _data)
+    def evaluate_value(node, _data, _webhook_id = nil)
       node["value"]
     end
 
-    def apply_function(function_name, arguments, data)
-      send(:"apply_function_#{function_name}", arguments, data)
+    def apply_function(function_name, arguments, data, webhook_id)
+      send(:"apply_function_#{function_name}", arguments, data, webhook_id)
     end
 
-    def apply_function_add(arguments, _data = nil)
+    def apply_function_add(arguments, _data = nil, _webhook_id = nil)
       return arguments[0] if arguments.length == 1
       arguments[0] + apply_function_add(arguments[1..-1])
     end
 
-    def apply_function_api_call(arguments, data)
+    def apply_function_api_call(arguments, data, webhook_id)
       verb = arguments[0]
       target = arguments[1]
       payload = arguments[2]
-      TrelloClient.api_call(verb, target, payload)
+      trello_client = @users_webhooks_cache.trello_client_from_callback(webhook_id);
+      trello_client.api_call(verb, target, payload)
     end
 
-    def apply_function_min(arguments, _data)
+    def apply_function_min(arguments, _data, _webhook_id = nil)
       arguments.min
     end
 
-    def apply_function_extract(arguments, _data)
+    def apply_function_extract(arguments, _data, _webhook_id = nil)
       path = arguments[0]
       data_to_extract = arguments[1]
       data_to_extract.map do |value|
@@ -126,7 +122,7 @@ module Letto
       end
     end
 
-    def apply_function_map(arguments, _data)
+    def apply_function_map(arguments, _data, _webhook_id = nil)
       mapping_table = arguments[1]
       mapped_values = arguments[0]
       mapped_values.map do |value|

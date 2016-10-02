@@ -45,6 +45,11 @@ module Letto
       )
     end
 
+    def api_call(verb, target, payload)
+      body = payload ? payload : {}
+      answ = client.send(:"#{verb.downcase}", target, body)
+    end
+
     # @return [String] Trello create webhook's id
     def create_board_webhook(board_id, callback_url, description)
       webhook_id = SecureRandom.uuid

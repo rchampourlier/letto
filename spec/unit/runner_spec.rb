@@ -3,6 +3,7 @@ require "spec_helper"
 require "runner"
 require "values/webhook"
 require "trello_client"
+require "users_webhooks_cache"
 
 describe Letto::Runner do
 
@@ -11,7 +12,10 @@ describe Letto::Runner do
   end
 
   let(:config) { {} }
-  subject { described_class.new(config) }
+  let(:trello_client) { double("TrelloClient") }
+  let(:users_webhooks_cache) { double("UsersWebhooksCache", trello_client_from_callback: trello_client) }
+
+  subject { described_class.new(config, users_webhooks_cache) }
 
   describe "execute_action" do
     context "evaluate_value" do
@@ -208,7 +212,7 @@ describe Letto::Runner do
             }
           }
         )
-        expect(Letto::TrelloClient).to receive(:api_call).with(
+        expect(trello_client).to receive(:api_call).with(
           "POST",
           "/cards/card_id",
           "due" => "due"
@@ -229,22 +233,6 @@ describe Letto::Runner do
           }
         ]
       }
-    end
-
-    describe "webhook_id comparison" do
-      context "matching" do
-        it "returns 1 workflow" do
-          matching_workflows = subject.matching_workflows(build_webhook)
-          expect(matching_workflows.count).to eq(1)
-        end
-      end
-
-      context "non-matching" do
-        it "returns an empty array" do
-          matching_workflows = subject.matching_workflows(build_webhook(id: "unknown"))
-          expect(matching_workflows).to eq([])
-        end
-      end
     end
 
     describe "string_comparison condition" do

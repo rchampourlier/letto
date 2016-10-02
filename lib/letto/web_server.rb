@@ -12,11 +12,9 @@ module Letto
   AUTH_CALLBACK_URL = "#{ENV['HOST']}/connection/callback"
   INCOMING_WEBHOOK_URL = "#{ENV['HOST']}/incoming_webhook"
 
-  # Web app module providing web endpoints:
-  #   - root (/) with status JSON response,
-  #   - webhooks.
-  #
-  # Webhooks are defined in /triggers/webhooks.
+  # Web server application, providing endpoints
+  # for both the user interface, the OAuth callbacks
+  # and the incoming webhooks.
   class WebServer < Sinatra::Base
     register Sinatra::Namespace
     use Rack::Session::Cookie,

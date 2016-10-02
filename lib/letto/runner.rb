@@ -107,11 +107,14 @@ module Letto
       target = arguments[1]
       payload = arguments[2]
       trello_client = @users_webhooks_cache.trello_client_from_callback(webhook_id);
-      trello_client.api_call(verb, target, payload)
+      JSON.load(trello_client.api_call(verb, target, payload))
     end
 
     def apply_function_min(arguments, _data, _webhook_id = nil)
-      arguments.min
+      if (arguments.length > 1 && arguments.find {|a| a.class == "Array"})
+        raise "function min takes 1 array as argument or multiple simple values"
+      end
+      arguments.flatten.compact.min
     end
 
     def apply_function_extract(arguments, _data, _webhook_id = nil)

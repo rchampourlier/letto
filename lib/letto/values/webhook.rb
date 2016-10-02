@@ -7,6 +7,7 @@ module Letto
     # Extracts headers from `request.env` (by ignoring keys prefixed by downcase
     # strings).
     class Webhook
+      attr_reader :id
       attr_reader :body
       attr_reader :headers
 

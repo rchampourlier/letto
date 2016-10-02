@@ -6,6 +6,7 @@ require "data/user_repository"
 require "data/incoming_webhook_repository"
 require "values/webhook"
 require "trello_client"
+require "runner"
 
 module Letto
   AUTH_CALLBACK_URL = "#{ENV['HOST']}/connection/callback"
@@ -133,10 +134,21 @@ module Letto
       handle_incoming_webhook(params[:webhook_id], request)
     end
 
-    def handle_incoming_webhook(id, request)
-      webhook = Letto::Values::Webhook.with_request(id, request)
-      puts(webhook)
+    def handle_incoming_webhook(webhook_id, request)
+      webhook = Letto::Values::Webhook.with_request(webhook_id, request)
+      write_webhook(webhook)
+      Runner.new(config).handle_webhook(webhook)
       { status: "ok" }.to_json
+    end
+
+    def write_webhook(webhook)
+      if ENV["RACK_ENV"] == "development"
+        File.write("webhook.json", webhook.parsed_body.to_json)
+      end
+    end
+
+    def config
+      JSON.load(File.read("workflows.json"))
     end
   end
 end

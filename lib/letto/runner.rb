@@ -4,7 +4,7 @@ module Letto
   # The runner
   class Runner
     attr_reader :config
-    SUPPORTED_NODE_TYPES = %w(expression operation value).freeze
+    SUPPORTED_NODE_TYPES = %w(expression operation value target payload).freeze
     SUPPORTED_FUNCTION_NAMES = %w(add api_call map min).freeze
 
     def initialize(config)
@@ -64,14 +64,17 @@ module Letto
       raise "Unknown function name: #{function_name}"
     end
 
-    def evaluate_target(raw_target, data)
-      expression = raw_target[/{{(.*)}}/, 1]
+    def evaluate_target(node, data)
+      raw_target = node["value"]
+      re = /{{(.*)}}/
+      expression = raw_target[re, 1].strip
       evaluated_expression = evaluate_expression({ "value" => expression }, data)
-      raw_target.gsub("{{" + expression + "}}", evaluated_expression)
+      raw_target.gsub(re, evaluated_expression)
     end
 
-    def evaluate_payload(payload, data)
-      payload.each_with_object({}) do |argument, node, evaluated_args|
+    def evaluate_payload(node, data)
+      payload = node["value"]
+      payload.each_with_object({}) do |(argument, node), evaluated_args|
         evaluated_args[argument] = evaluate_node(node, data)
       end
     end
@@ -99,26 +102,35 @@ module Letto
       send(:"apply_function_#{function_name}", arguments, data)
     end
 
-    def apply_function_add(arguments, _data)
+    def apply_function_add(arguments, _data = nil)
       return arguments[0] if arguments.length == 1
       arguments[0] + apply_function_add(arguments[1..-1])
     end
 
     def apply_function_api_call(arguments, data)
-      target = evaluate_target(arguments["target"], data)
-      payload = evaluate_payload(arguments["payload"], data)
-      TrelloClient.api_call(arguments["verb"], target, payload)
+      verb = arguments[0]
+      target = arguments[1]
+      payload = arguments[2]
+      TrelloClient.api_call(verb, target, payload)
     end
 
     def apply_function_min(arguments, _data)
       arguments.min
     end
 
+    def apply_function_extract(arguments, _data)
+      path = arguments[0]
+      data_to_extract = arguments[1]
+      data_to_extract.map do |value|
+        value[path]
+      end
+    end
+
     def apply_function_map(arguments, _data)
       mapping_table = arguments[1]
       mapped_values = arguments[0]
       mapped_values.map do |value|
-        mapping_table[1][value]
+        mapping_table[value]
       end
     end
 

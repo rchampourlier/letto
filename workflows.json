@@ -2,7 +2,7 @@
   "workflows": [
     {
       "name": "setDueDateOnLabelChange",
-      "webhook_id": "???",
+      "webhook_id": "957fd7f6-4472-453c-9f90-1fe785847645",
       "conditions": [
         {
           "type": "string_comparison",
@@ -14,46 +14,74 @@
       "action": {
         "type": "operation",
         "function": "api_call",
-        "arguments": {
-          "verb": "POST",
-          "target": "/cards/{{ action.card.id }}",
-          "payload": {
-            "due": {
-              "type": "operation",
-              "function": "add",
-              "arguments": [
-                {
-                  "type": "expression",
-                  "value": "action.date"
-                },
-                {
-                  "type": "operation",
-                  "function": "min",
-                  "arguments": [
-                    {
-                      "type": "operation",
-                      "function": "map",
-                      "arguments": [
-                        {
-                          "type": "operation",
-                          "function": "api_call",
-                          "arguments": {
-                            "verb": "GET",
-                            "target": "/cards/{{ action.card.id }}/labels"
+        "arguments": [
+          {
+            "type": "value",
+            "value": "POST"
+          },
+          {
+            "type": "target",
+            "value": "/cards/{{ action.data.card.id }}" 
+          },
+          {
+            "type" : "payload",
+            "value": {
+              "due": {
+                "type": "operation",
+                "function": "add",
+                "arguments": [
+                  {
+                    "type": "expression",
+                    "value": "action.date"
+                  },
+                  {
+                    "type": "operation",
+                    "function": "min",
+                    "arguments": [
+                      {
+                        "type": "operation",
+                        "function": "map",
+                        "arguments": [
+                          {
+                            "type": "operation",
+                            "function": "extract",
+                            "arguments": [
+                              {
+                                "type": "value",
+                                "value": "name"
+                              },
+                              {
+                                "type": "operation",
+                                "function": "api_call",
+                                "arguments": [
+                                  {
+                                    "type": "value",
+                                    "value": "GET"
+                                  },
+                                  {
+                                    "type": "target",
+                                    "value": "/cards/{{ action.data.card.id }}/labels"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "type": "value",
+                            "value": {
+                              "active contact": 7,
+                              "passive contact": 30
+                            }
                           }
-                        },
-                        {
-                          "active contact": 7,
-                          "passive contact": 30
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
             }
           }
-        }
+        ]
       }
     }
   ]

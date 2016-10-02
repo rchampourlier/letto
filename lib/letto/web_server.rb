@@ -142,7 +142,7 @@ module Letto
     end
 
     def write_webhook(webhook)
-      if ENV["RACK_ENV"] == "development"
+      if false && ENV["RACK_ENV"] == "development"
         File.write("webhook.json", webhook.parsed_body.to_json)
       end
     end

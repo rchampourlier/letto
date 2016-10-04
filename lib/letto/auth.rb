@@ -14,6 +14,11 @@ module Letto
       http_method: :get
     }.freeze
 
+    AUTHORIZE_URL_PARAMS = {
+      name: ENV["TRELLO_APP_NAME"] || "Unknown application",
+      scope: "read,write"
+    }.freeze
+
     def initialize(session, callback)
       @session = prepare_session(session)
       @consumer ||= OAuth::Consumer.new(
@@ -22,7 +27,6 @@ module Letto
         TRELLO_OAUTH_CONFIG
       )
       @callback = callback
-      @name = ENV["TRELLO_APP_NAME"] || "Unknown application"
 
       load_request_token
       load_access_token
@@ -36,7 +40,8 @@ module Letto
       @request_token = @consumer.get_request_token(oauth_callback: @callback)
       store[:request_token] = @request_token.token
       store[:request_token_secret] = @request_token.secret
-      @request_token.authorize_url + "&name=#{@name}"
+      @request_token.authorize_url(AUTHORIZE_URL_PARAMS)
+
     end
 
     def retrieve_access_token(params)

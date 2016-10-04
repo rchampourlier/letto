@@ -59,7 +59,7 @@ module Letto
         "idModel" => board_id,
         "callbackURL" => [callback_url, webhook_id].join("/")
       )
-      trello_webhook.attributes[:id]
+      webhook_id
     end
 
     def delete_webhook(webhook_id)

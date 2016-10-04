@@ -94,6 +94,7 @@ module Letto
           INCOMING_WEBHOOK_URL,
           description
         )
+        UsersWebhooksCache.add_callback_to_cache(trello_webhook_id, auth.access_token, auth.access_token_secret)
         redirect "/trello/webhooks"
       end
 

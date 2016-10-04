@@ -7,6 +7,7 @@ module Letto
     attr_reader :users_webhooks_cache
     SUPPORTED_NODE_TYPES = %w(expression operation value target payload).freeze
     SUPPORTED_FUNCTION_NAMES = %w(add api_call map min).freeze
+    SUPPORTED_CONVERSION_FUNCTIONS = %w(String Complex Float Integer Rational DateTime).freeze
 
     def initialize(config, users_webhooks_cache)
       @config = config
@@ -131,6 +132,16 @@ module Letto
       mapped_values.map do |value|
         mapping_table[value]
       end
+    end
+
+    def apply_function_convert(arguments, _data, _webhook_id = nil)
+      dest_type = arguments[0]
+      value = arguments[1]
+      if SUPPORTED_CONVERSION_FUNCTIONS.include?(dest_type)
+        return DateTime.parse(value) if dest_type == "DateTime" 
+        return send(:"#{dest_type}", value)
+      end
+      raise "Unknown conversion function : #{dest_type}"
     end
 
     def workflows

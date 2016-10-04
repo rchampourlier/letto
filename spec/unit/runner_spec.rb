@@ -175,6 +175,58 @@ describe Letto::Runner do
       end
     end
 
+    describe "apply_function_convert" do
+      context "conversion from String to DateTime" do
+        let(:action) do
+          {
+            "type" => "operation",
+            "function" => "convert",
+            "arguments" => [
+              {
+                "type"=> "value",
+                "value" => "DateTime"
+              },
+              {
+                "type" => "value",
+                "value" => "2016-10-03T20:09:32.301Z"
+              }
+            ]
+          }
+        end
+
+        it "returns an object DateTime from the parsed string" do
+          webhook = build_webhook()
+          execute_action = subject.execute_action(action, webhook)
+          expect(execute_action).to eq(DateTime.parse("2016-10-03T20:09:32.301Z"))
+        end
+      end
+
+      context "conversion from Integer to String" do
+        let(:action) do
+          {
+            "type" => "operation",
+            "function" => "convert",
+            "arguments" => [
+              {
+                "type"=> "value",
+                "value" => "String"
+              },
+              {
+                "type" => "value",
+                "value" => 2016
+              }
+            ]
+          }
+        end
+
+        it "returns a string \"2016\"" do
+          webhook = build_webhook()
+          execute_action = subject.execute_action(action, webhook)
+          expect(execute_action).to eq("2016")
+        end
+      end
+    end
+
     context "apply_function_api_call" do
       let(:action) do
         {

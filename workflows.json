@@ -22,7 +22,7 @@
         "arguments": [
           {
             "type": "value",
-            "value": "POST"
+            "value": "PUT"
           },
           {
             "type": "target",
@@ -36,8 +36,18 @@
                 "function": "add",
                 "arguments": [
                   {
-                    "type": "expression",
-                    "value": "action.date"
+                    "type": "operation",
+                    "function": "convert",
+                    "arguments": [
+                      {
+                        "type": "value",
+                        "value": "DateTime"
+                      },
+                      {
+                        "type": "expression",
+                        "value": "action.date"
+                      }
+                    ]
                   },
                   {
                     "type": "operation",
@@ -74,8 +84,9 @@
                           {
                             "type": "value",
                             "value": {
-                              "active contact": 7,
-                              "passive contact": 30
+                              "active contact": 30,
+                              "passive contact": 60,
+                              "Action to take" : 7
                             }
                           }
                         ]

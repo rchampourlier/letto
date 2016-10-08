@@ -21,7 +21,7 @@ module Letto
           end
         rescue => error
           puts "invalid user "+ user[:username]
-          #Data::UserRepository.delete(user[:uuid])
+          Data::UserRepository.delete_user(user[:uuid])
         end 
       end
     end

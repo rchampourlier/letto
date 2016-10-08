@@ -24,6 +24,10 @@ module Letto
         user
       end
 
+      def self.delete_user(uuid)
+        delete(:uuid => uuid.to_s)
+      end
+
       def self.all()
         db[:users]
       end

@@ -4,6 +4,7 @@ require "runner"
 require "values/webhook"
 require "trello_client"
 require "users_webhooks_cache"
+require "workflows_checker"
 
 describe Letto::Runner do
 
@@ -14,8 +15,12 @@ describe Letto::Runner do
   let(:config) { {} }
   let(:trello_client) { double("TrelloClient") }
   let(:users_webhooks_cache) { double("UsersWebhooksCache", trello_client_from_callback: trello_client) }
-
+  
   subject { described_class.new(config, users_webhooks_cache) }
+
+  before(:each) do
+    allow(Letto::WorkflowsChecker).to receive(:check_workflows).and_return(true)
+  end
 
   describe "execute_action" do
     context "evaluate_value" do
@@ -299,6 +304,50 @@ describe Letto::Runner do
                   "type" => "string_comparison",
                   "path" => "action.type",
                   "value" => "addLabelToCard"
+                }
+              ]
+            }
+          ]
+        }
+      end
+
+      context "matching" do
+        it "returns 1 workflow" do
+          webhook = build_webhook(
+            body: {
+              "action" => { "type" => "addLabelToCard" }
+            }
+          )
+          matching_workflows = subject.matching_workflows(webhook)
+          expect(matching_workflows.count).to eq(1)
+        end
+      end
+
+      context "non-matching" do
+        it "returns 0 workflows" do
+          webhook = build_webhook(
+            body: {
+              "action" => { "type" => "other" }
+            }
+          )
+          matching_workflows = subject.matching_workflows(webhook)
+          expect(matching_workflows.count).to eq(0)
+        end
+      end
+    end
+
+    describe "multiple matchings workflows" do
+      let(:config) do
+        {
+          "workflows" => [
+            {
+              "name" => "someWorkflow",
+              "webhook_id" => "id",
+              "conditions" => [
+                {
+                  "type" => "string_comparison",
+                  "path" => "action.type",
+                  "value" => ["addLabelToCard", "cardCreated"]
                 }
               ]
             }

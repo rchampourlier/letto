@@ -1,17 +1,17 @@
 # frozen_string_literal: true
+
+require "workflows_checker"
 module Letto
 
   # The runner
   class Runner
     attr_reader :config
     attr_reader :users_webhooks_cache
-    SUPPORTED_NODE_TYPES = %w(expression operation value target payload).freeze
-    SUPPORTED_FUNCTION_NAMES = %w(add api_call map min).freeze
-    SUPPORTED_CONVERSION_FUNCTIONS = %w(String Complex Float Integer Rational DateTime).freeze
 
     def initialize(config, users_webhooks_cache)
       @config = config
       @users_webhooks_cache = users_webhooks_cache
+      WorkflowsChecker.check_workflows(workflows)
     end
 
     def handle_webhook(webhook)
@@ -36,28 +36,31 @@ module Letto
 
     def verifies_workflow_conditions(workflow, webhook)
       workflow["conditions"].each do |condition|
-        return false unless verify_workflow_condition(condition, webhook)
+        return false unless verify_workflow_expected_values(condition, webhook)
       end
       true
     end
 
-    def verify_workflow_condition(condition, webhook)
-      if condition["type"] == "string_comparison"
-        expected_value = condition["value"]
-        observed_value = webhook.parsed_body.dig(*condition["path"].split("."))
+    def verify_workflow_expected_values(condition, webhook)
+      type = condition["type"]
+      expected_values = condition["value"]
+      path = condition["path"]
+      if expected_values.is_a?(Array)
+        expected_values.each do |expected_value|
+          return true if verify_workflow_condition(type, expected_value, path, webhook)
+        end
+        false
+      else
+        return verify_workflow_condition(type, expected_values, path, webhook)
+      end
+    end
+
+    def verify_workflow_condition(type, expected_value, path, webhook)
+      if type == "string_comparison"
+        observed_value = webhook.parsed_body.dig(*path.split("."))
         return expected_value == observed_value
       end
       raise "Unknown condition type: #{condition['type']}"
-    end
-
-    def verify_supported_node_type!(node_type)
-      return if SUPPORTED_NODE_TYPES.include?(node_type)
-      raise "Unknown node type: #{node_type}"
-    end
-
-    def verify_supported_function!(function_name)
-      return if SUPPORTED_FUNCTION_NAMES.includes?(function_name)
-      raise "Unknown function name: #{function_name}"
     end
 
     def evaluate_target(node, data, _webhook_id = nil)
@@ -77,7 +80,6 @@ module Letto
 
     def evaluate_node(node, data, webhook_id)
       node_type = node["type"]
-      verify_supported_node_type!(node_type)
       send(:"evaluate_#{node_type}", node, data, webhook_id)
     end
 
@@ -99,7 +101,11 @@ module Letto
     end
 
     def apply_function_add(arguments, _data = nil, _webhook_id = nil)
-      return arguments[0] if arguments.length == 1
+      puts "in add arguments length : "+ arguments.length.to_s + " and values : "+arguments.to_s
+      if arguments.length == 1
+        return 0 if arguments[0].nil?
+        return arguments[0]
+      end
       arguments[0] + apply_function_add(arguments[1..-1])
     end
 
@@ -137,15 +143,13 @@ module Letto
     def apply_function_convert(arguments, _data, _webhook_id = nil)
       dest_type = arguments[0]
       value = arguments[1]
-      if SUPPORTED_CONVERSION_FUNCTIONS.include?(dest_type)
-        return DateTime.parse(value) if dest_type == "DateTime" 
-        return send(:"#{dest_type}", value)
-      end
-      raise "Unknown conversion function : #{dest_type}"
+      return DateTime.parse(value) if dest_type == "DateTime" 
+      return send(:"#{dest_type}", value)
     end
 
     def workflows
       config["workflows"]
     end
+
   end
 end

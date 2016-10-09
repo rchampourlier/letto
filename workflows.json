@@ -13,7 +13,7 @@
           "type": "string_comparison",
           "target": "payload",
           "path": "action.type",
-          "value": "addLabelToCard"
+          "value": ["addLabelToCard", "commentCard"]
         }
       ],
       "action": {

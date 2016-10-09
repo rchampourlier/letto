@@ -7,6 +7,7 @@ module Letto
       users = Data::UserRepository.all()
       @user_webhooks_cache = {}
       users.each do |user|
+        next if user[:trello_access_token].nil? || user[:trello_access_token_secret].nil?
         trello_client = TrelloClient.new(user[:trello_access_token], user[:trello_access_token_secret])
         begin
           webhooks = trello_client.webhooks

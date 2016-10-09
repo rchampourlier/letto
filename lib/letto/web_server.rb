@@ -53,7 +53,7 @@ module Letto
     end
 
     get "/connection/destroy" do
-      # TODO
+      trello_client.delete_token(auth.access_token)
       redirect "/"
     end
 

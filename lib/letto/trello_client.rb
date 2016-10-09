@@ -66,6 +66,10 @@ module Letto
       client.delete("/webhooks/#{webhook_id}")
     end
 
+    def delete_token(token_id)
+      client.delete("/tokens/#{token_id}")
+    end
+
     private
 
     def token

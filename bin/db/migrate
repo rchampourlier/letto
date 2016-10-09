@@ -1,2 +1,7 @@
 #!/usr/bin/env bash
-export $(cat .env | xargs) && sequel -m config/db_migrations $DATABASE_URL
+if [ "$RACK_ENV" == "production" ]
+then
+  sequel -m config/db_migrations $DATABASE_URL
+else
+  export $(cat .env | xargs) && sequel -m config/db_migrations $DATABASE_URL
+fi

@@ -101,7 +101,6 @@ module Letto
     end
 
     def apply_function_add(arguments, _data = nil, _webhook_id = nil)
-      puts "in add arguments length : "+ arguments.length.to_s + " and values : "+arguments.to_s
       if arguments.length == 1
         return 0 if arguments[0].nil?
         return arguments[0]
@@ -127,8 +126,12 @@ module Letto
     def apply_function_extract(arguments, _data, _webhook_id = nil)
       path = arguments[0]
       data_to_extract = arguments[1]
-      data_to_extract.map do |value|
-        value[path]
+      if data_to_extract.is_a?(Array)
+        data_to_extract.map do |value|
+          value[path]
+        end
+      elsif data_to_extract.is_a?(Hash)
+        data_to_extract[path]
       end
     end
 

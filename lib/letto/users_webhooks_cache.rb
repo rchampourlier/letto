@@ -7,22 +7,24 @@ module Letto
       users = Data::UserRepository.all()
       @user_webhooks_cache = {}
       users.each do |user|
-        trello_client = TrelloClient.new(user[:access_token], user[:access_token_secret])
+        trello_client = TrelloClient.new(user[:trello_access_token], user[:trello_access_token_secret])
         begin
           webhooks = trello_client.webhooks
-          webhooks = webhooks.map(&:attributes) 
-          webhooks.each do |webhook|
-            callback_url = webhook[:callback_url]
-            callback_id = callback_url.gsub(webhook_url_root+"/", '')
-            @user_webhooks_cache[callback_id] = {
-              access_token: user[:access_token],
-              access_token_secret: user[:access_token_secret]
-            }
-          end
-        rescue => error
-          puts "invalid user "+ user[:username]
-          Data::UserRepository.delete_by_uuid(user[:uuid])
+        rescue Trello::Error => error
+          puts "invalid user #{user[:username]}"
+          puts error
+          Data::UserRepository.update_by_uuid(user[:uuid], trello_access_token: nil, trello_access_token_secret: nil)
+          next
         end 
+        webhooks = webhooks.map(&:attributes) 
+        webhooks.each do |webhook|
+          callback_url = webhook[:callback_url]
+          callback_id = callback_url.gsub(webhook_url_root+"/", '')
+          @user_webhooks_cache[callback_id] = {
+            access_token: user[:trello_access_token],
+            access_token_secret: user[:atrello_ccess_token_secret]
+          }
+        end
       end
     end
 

@@ -24,8 +24,12 @@ module Letto
         user
       end
 
-      def self.delete_user(uuid)
-        delete(:uuid => uuid.to_s)
+      def self.update_by_uuid(uuid, values)
+        db[:users].where(uuid: uuid.to_s).update(values)
+      end
+
+      def self.delete_by_uuid(uuid)
+        delete(uuid: uuid.to_s)
       end
 
       def self.all()

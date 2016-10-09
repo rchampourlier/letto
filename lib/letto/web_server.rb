@@ -25,15 +25,22 @@ module Letto
     set :show_exceptions, false if ENV["RACK_ENV"] == "test"
     UsersWebhooksCache.load(webhook_url_root: INCOMING_WEBHOOK_URL)
 
-    attr_reader :auth
+    attr_reader :auth, :user
 
     before do
       @auth = Auth.new(session, AUTH_CALLBACK_URL)
       @user = Data::UserRepository.for_session_id(session[:session_id])
     end
 
-    def trello_client
-      @trello_client ||= TrelloClient.new(auth.access_token, auth.access_token_secret)
+    def trello_client_for_current_user
+      access_token = user[:access_token]
+      access_token_secret = user[:access_token_secret]
+      raise "No access_token for current user" if access_token.nil? || access_token_secret.nil?
+      @trello_client_for_current_user ||= trello_client(access_token, access_token_secret)
+    end
+
+    def trello_client(access_token, access_token_secret)
+      TrelloClient.new(access_token, access_token_secret)
     end
 
     get "/connection" do
@@ -41,24 +48,21 @@ module Letto
     end
 
     get "/connection/callback" do
-      auth.retrieve_access_token(params)
-      username = trello_client.username
+      access_token, access_token_secret = auth.retrieve_access_token(params)
+      username = trello_client(access_token, access_token_secret).username
       Data::UserRepository.create(
         username,
-        auth.access_token,
-        auth.access_token_secret,
+        access_token,
+        access_token_secret,
         session["session_id"]
       )
       redirect "/"
     end
 
     get "/connection/destroy" do
-      trello_client.delete_token(auth.access_token)
+      trello_client_for_current_user.delete_token(user[:access_token])
+      Data::UserRepository.update_by_uuid(user[:uuid], access_token: nil, access_token_secret: nil)
       redirect "/"
-    end
-
-    get "/logout" do
-      # TODO
     end
 
     get "/" do
@@ -68,9 +72,9 @@ module Letto
 
     namespace "/trello" do
       get "/boards" do
-        organizations = trello_client.organizations.map(&:attributes)
+        organizations = trello_client_for_current_user.organizations.map(&:attributes)
         organizations.push(display_name: "No Team", id: nil)
-        all_boards = trello_client.boards.map(&:attributes)
+        all_boards = trello_client_for_current_user.boards.map(&:attributes)
         boards = all_boards.select { |board| board[:closed] == false }
         @organizations = boards.each_with_object({}) do |board, hash|
           organization_id = board[:organization_id]
@@ -89,25 +93,25 @@ module Letto
         board_id = params[:board_id]
         board_name = params[:board_name]
         description = "Trello webhook on board \"#{board_name}\""
-        trello_webhook_id = trello_client.create_board_webhook(
+        trello_webhook_id = trello_client_for_current_user.create_board_webhook(
           board_id,
           INCOMING_WEBHOOK_URL,
           description
         )
-        UsersWebhooksCache.add_callback_to_cache(trello_webhook_id, auth.access_token, auth.access_token_secret)
+        UsersWebhooksCache.add_callback_to_cache(trello_webhook_id, user["access_token"], user["access_token_secret"])
         redirect "/trello/webhooks"
       end
 
       get "/webhooks/delete_webhook/:webhook_id" do
         webhook_id = params[:webhook_id]
-        trello_client.delete_webhook(
+        trello_client_for_current_user.delete_webhook(
           webhook_id
         )
         redirect "/trello/webhooks"
       end
 
       get "/webhooks" do
-        @webhooks = trello_client.webhooks.map(&:attributes)
+        @webhooks = trello_client_for_current_user.webhooks.map(&:attributes)
         @delete_webhook_urls = @webhooks.map do |webhooks|
           "/trello/webhooks/delete_webhook/#{webhooks[:id]}"
         end

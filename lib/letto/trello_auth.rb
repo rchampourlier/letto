@@ -4,7 +4,7 @@ require "oauth/consumer"
 module Letto
 
   # Handles OAuth1.0a Trello authentication
-  class Auth
+  class TrelloAuth
 
     attr_reader :access_token, :access_token_secret
 

@@ -6,7 +6,7 @@
   </head>
   <body>
     <ul>
-      <% if @user && @user[:access_token] %>
+      <% if @user && @user[:trello_access_token] %>
         <li>You're connected to Trello (username: <%= @username %>)</li>
         <li><a href="/trello/boards">Boards</a></li>
         <li><a href="/trello/webhooks">Webhooks</a></li>

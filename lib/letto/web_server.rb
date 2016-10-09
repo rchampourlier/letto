@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require "sinatra/base"
 require "sinatra/namespace"
-require "auth"
+require "trello_auth"
 require "data/user_repository"
 require "values/webhook"
 require "trello_client"
@@ -9,7 +9,7 @@ require "runner"
 require "users_webhooks_cache"
 
 module Letto
-  AUTH_CALLBACK_URL = "#{ENV['HOST']}/connection/callback"
+  TRELLO_AUTH_CALLBACK_URL = "#{ENV['HOST']}/connection/callback"
   INCOMING_WEBHOOK_URL = "#{ENV['HOST']}/incoming_webhook"
 
   # Web server application, providing endpoints
@@ -25,18 +25,18 @@ module Letto
     set :show_exceptions, false if ENV["RACK_ENV"] == "test"
     UsersWebhooksCache.load(webhook_url_root: INCOMING_WEBHOOK_URL)
 
-    attr_reader :auth, :user
+    attr_reader :trello_auth, :user
 
     before do
-      @auth = Auth.new(session, AUTH_CALLBACK_URL)
+      @trello_auth = TrelloAuth.new(session, TRELLO_AUTH_CALLBACK_URL)
       @user = Data::UserRepository.for_session_id(session[:session_id])
     end
 
     def trello_client_for_current_user
-      access_token = user[:access_token]
-      access_token_secret = user[:access_token_secret]
-      raise "No access_token for current user" if access_token.nil? || access_token_secret.nil?
-      @trello_client_for_current_user ||= trello_client(access_token, access_token_secret)
+      trello_access_token = user[:trello_access_token]
+      trello_access_token_secret = user[:trello_access_token_secret]
+      raise "No trello_access_token for current user" if trello_access_token.nil? || trello_access_token_secret.nil?
+      @trello_client_for_current_user ||= trello_client(trello_access_token, trello_access_token_secret)
     end
 
     def trello_client(access_token, access_token_secret)
@@ -44,24 +44,28 @@ module Letto
     end
 
     get "/connection" do
-      redirect auth.authorize_url
+      redirect trello_auth.authorize_url
     end
 
     get "/connection/callback" do
-      access_token, access_token_secret = auth.retrieve_access_token(params)
-      username = trello_client(access_token, access_token_secret).username
-      Data::UserRepository.create(
-        username,
-        access_token,
-        access_token_secret,
-        session["session_id"]
-      )
+      trello_access_token, trello_access_token_secret = trello_auth.retrieve_access_token(params)
+      username = trello_client(trello_access_token, trello_access_token_secret).username
+      if user
+        Data::UserRepository.update_by_uuid(user[:uuid], trello_access_token: trello_access_token, trello_access_token_secret: trello_access_token_secret)
+      else
+        Data::UserRepository.create(
+          username,
+          trello_access_token,
+          trello_access_token_secret,
+          session["session_id"]
+        )
+      end
       redirect "/"
     end
 
     get "/connection/destroy" do
-      trello_client_for_current_user.delete_token(user[:access_token])
-      Data::UserRepository.update_by_uuid(user[:uuid], access_token: nil, access_token_secret: nil)
+      trello_client_for_current_user.delete_token(user[:trello_access_token])
+      Data::UserRepository.update_by_uuid(user[:uuid], trello_access_token: nil, trello_access_token_secret: nil)
       redirect "/"
     end
 

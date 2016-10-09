@@ -6,8 +6,8 @@ Sequel.migration do
     create_table :users do
       String :uuid, primary_key: true
       String :username, null: false
-      String :access_token
-      String :access_token_secret
+      String :trello_access_token
+      String :trello_access_token_secret
       String :session_id
       DateTime :created_at, null: false
       DateTime :updated_at, null: false

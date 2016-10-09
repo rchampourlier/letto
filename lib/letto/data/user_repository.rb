@@ -11,8 +11,8 @@ module Letto
           row(
             uuid: generate_uuid,
             username: username,
-            access_token: access_token,
-            access_token_secret: access_token_secret,
+            trello_access_token: access_token,
+            trello_access_token_secret: access_token_secret,
             session_id: session_id
           )
         )

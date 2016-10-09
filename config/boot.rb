@@ -7,7 +7,7 @@ require "bundler"
 env = (ENV["RACK_ENV"] ||= "development")
 Bundler.setup(:default, env.to_sym)
 
-if env == "development"
+if env == "development" || env == "test"
   require "dotenv"
   require "pry"
   Dotenv.load

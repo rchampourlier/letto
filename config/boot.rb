@@ -3,13 +3,13 @@
 # Load dependencies
 require "rubygems"
 require "bundler"
-require "pry" # temp
 
-env = (ENV["APP_ENV"] ||= "development")
+env = (ENV["RACK_ENV"] ||= "development")
 Bundler.setup(:default, env.to_sym)
 
 if env == "development"
   require "dotenv"
+  require "pry"
   Dotenv.load
 end
 

@@ -12,7 +12,7 @@ Usage:
 
 REMOTE_BRANCH = "master"
 LOCAL_DEFAULT = "master"
-target = ARGV[0] || "production"
+target = ARGV[0] || "heroku"
 branch = ARGV[0] || LOCAL_DEFAULT
 
 def usage_and_exit

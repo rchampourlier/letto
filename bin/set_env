@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+env_file = File.expand_path('../../.env.production', __FILE__)
+envs = File.read(env_file)
+envs.gsub!("\n", ' ')
+envs.strip!
+
+command = "heroku config:set #{envs}"
+puts "[RUN] #{command}"
+system command

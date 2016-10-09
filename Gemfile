@@ -21,6 +21,7 @@ gem "sequel_pg"
 gem "oauth"
 gem "slack-ruby-bot"
 gem "ruby-trello"
+gem "nokogiri"
 
 # Ruby sugar
 gem "activesupport"

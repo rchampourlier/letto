@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 require "workflows_checker"
+require 'rubygems'
+require 'nokogiri'
+require 'open-uri'
+
 module Letto
 
   # The runner
@@ -59,6 +63,9 @@ module Letto
       if type == "string_comparison"
         observed_value = webhook.parsed_body.dig(*path.split("."))
         return expected_value == observed_value
+      elsif type == "regex_comparison"
+        observed_value = webhook.parsed_body.dig(*path.split("."))
+        return observed_value.match(expected_value)
       end
       raise "Unknown condition type: #{condition['type']}"
     end
@@ -148,6 +155,16 @@ module Letto
       value = arguments[1]
       return DateTime.parse(value) if dest_type == "DateTime" 
       return send(:"#{dest_type}", value)
+    end
+
+    def apply_function_get_linkedin_photo(arguments, _data, _webhook_id = nil)
+      linkedin_url = arguments[0]
+      linkedin_verifier = /(https?:\/\/www.linkedin.com\/in\/.*)\??/
+      parsed_url = linkedin_url[linkedin_verifier, 1]
+      raise "Not a linkedin url #{linkedin_url}" if parsed_url.nil?
+      linkedin_selector = "div.profile-picture * img[data-delayed-url]"
+      source = Nokogiri::HTML(open(linkedin_url,"User-Agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36"))
+      source.css(linkedin_selector)[0]["data-delayed-url"]
     end
 
     def workflows

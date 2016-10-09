@@ -179,6 +179,58 @@
           }
         ]
       }
+    },
+    {
+      "name": "setPhotoOnLinkedinURLAttachement",
+      "conditions": [
+        {
+          "type": "string_comparison",
+          "target": "payload",
+          "path": "model.id",
+          "value": ["57af3d3bf86d0a23b57b3ace", "57c5c7416c3f27a4f47e82be"]
+        },
+        {
+          "type": "string_comparison",
+          "target": "payload",
+          "path": "action.type",
+          "value": "addAttachmentToCard"
+        },
+        {
+          "type": "regex_comparison",
+          "target": "payload",
+          "path": "action.data.attachment.url",
+          "value": "https?:\/\/www.linkedin.com\/in\/.*"
+        }
+      ],
+      "action": {
+        "type": "operation",
+        "function": "api_call",
+        "arguments": [
+          {
+            "type": "value",
+            "value": "POST"
+          },
+          {
+            "type": "target",
+            "value": "/cards/{{ action.data.card.id }}/attachments" 
+          },
+          {
+            "type" : "payload",
+            "value": {
+              "url": {
+                "type": "operation",
+                "function": "get_linkedin_photo",
+                "arguments": [
+                  {
+                    "type": "expression",
+                    "value": "action.data.attachment.url"
+                  }
+                ]
+              }
+            }
+          }
+        ]        
+      }
     }
   ]
 }

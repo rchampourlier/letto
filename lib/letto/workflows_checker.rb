@@ -3,7 +3,7 @@ module Letto
 
   class WorkflowsChecker
     SUPPORTED_NODE_TYPES = %w(expression operation value target payload).freeze
-    SUPPORTED_FUNCTION_NAMES = %w(add api_call map min convert extract).freeze
+    SUPPORTED_FUNCTION_NAMES = %w(add api_call map min convert extract get_linkedin_photo).freeze
     SUPPORTED_CONVERSION_FUNCTIONS = %w(String Complex Float Integer Rational DateTime).freeze
     SUPPORTED_VERBS = %w(GET POST PUT DELETE).freeze
 

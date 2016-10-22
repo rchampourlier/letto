@@ -54,7 +54,11 @@ module Letto
       trello_access_token, trello_access_token_secret = trello_auth.retrieve_access_token(params)
       username = trello_client(trello_access_token, trello_access_token_secret).username
       if user
-        Data::UserRepository.update_by_uuid(user[:uuid], trello_access_token: trello_access_token, trello_access_token_secret: trello_access_token_secret)
+        Data::UserRepository.update_by_uuid(
+          user[:uuid],
+          trello_access_token: trello_access_token,
+          trello_access_token_secret: trello_access_token_secret
+        )
       else
         Data::UserRepository.create(
           username,
@@ -138,7 +142,11 @@ module Letto
           INCOMING_WEBHOOK_URL,
           description
         )
-        UsersWebhooksCache.add_callback_to_cache(trello_webhook_id, user[:trello_access_token], user[:trello_access_token_secret])
+        UsersWebhooksCache.add_callback_to_cache(
+          trello_webhook_id,
+          user[:trello_access_token],
+          user[:trello_access_token_secret]
+        )
         redirect "/trello/webhooks"
       end
 
@@ -189,7 +197,7 @@ module Letto
     end
 
     def render_workflows(content, uuid, flash_messages = nil)
-      flash_messages&.each { |k, v| flash[k] = v }
+      flash_messages&.each { |k, v| flash.now[k] = v }
       @workflows = Data::WorkflowRepository.all
       @content = content
       @selected_uuid = uuid
@@ -213,13 +221,13 @@ module Letto
         err_message = "Invalid JSON content: #{e.message}"
       end
       if successful
-        flash[:notice] = "Workflow #{content['name']} saved with id #{uuid}"
+        flash[:success] = "Workflow #{content['name']} saved with id #{uuid}"
         redirect "/workflows/#{uuid}"
       else
         content = params["content"]
-        render_workflows(content, nil, error: err_message)
+        puts err_message
+        render_workflows(content, nil, danger: err_message)
       end
     end
-
   end
 end

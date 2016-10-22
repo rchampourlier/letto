@@ -11,7 +11,7 @@ module Letto
 
     def self.check_workflows(workflows)
       raise_workflow_error "No workflows to check" if workflows.nil?
-      workflows.all? { |workflow| check_workflow(workflow)}
+      workflows.all? { |workflow| check_workflow(workflow) }
     end
 
     def self.raise_workflow_error(message)
@@ -23,41 +23,41 @@ module Letto
       # should have a name
       raise_workflow_error "Workflows should have a name" if name.nil?
       # should have at least one condition on board ID
-      raise_workflow_error "Workflows should have a conditions block (" + name + ")" if workflow["conditions"].nil?
-      raise_workflow_error "Workflows should have an array in condition block (" + name + ")" unless workflow["conditions"].is_a?(Array)
-      raise_workflow_error "Workflows should have at least one condition on model.id (" + name + ")" if workflow["conditions"].none? {|a| a["path"]=="model.id"}
+      raise_workflow_error "Workflows should have a conditions block (#{name})" if workflow["conditions"].nil?
+      raise_workflow_error "Workflows should have an array in condition block (#{name})" unless workflow["conditions"].is_a?(Array)
+      raise_workflow_error "Workflows should have at least one condition on model.id (#{name})" if workflow["conditions"].none? { |a| a["path"] == "model.id" }
       # shouls have an action
-      raise_workflow_error "Workflows should have an action (" + name + ")" if workflow["action"].nil?
+      raise_workflow_error "Workflows should have an action (#{name})" if workflow["action"].nil?
       # each block in action shoud
-      return check_block_in_workflow(workflow["action"])
+      check_block_in_workflow(workflow["action"])
     end
 
     def self.check_block_in_workflow(block)
       type = block["type"]
       # should have a type
-      raise_workflow_error "Blocks should have a type "+ block.to_s if type.nil?
+      raise_workflow_error "Blocks should have a type #{block}" if type.nil?
       # should be a supported type
-      raise_workflow_error "Blocks should have a supported type "+ block.to_s unless verify_supported_node_type!(type)
+      raise_workflow_error "Blocks should have a supported type #{block}" unless verify_supported_node_type!(type)
       if type == "operation"
         function = block["function"]
         arguments = block["arguments"]
         # should have a function name
-        raise_workflow_error "Opeation blocks should have a function name block "+ block.to_s if function.nil?
+        raise_workflow_error "Opeation blocks should have a function name block #{block}" if function.nil?
         # should be a supported function
-        raise_workflow_error "Opeation blocks should have a supported function name "+ block.to_s unless verify_supported_function!(function)
+        raise_workflow_error "Opeation blocks should have a supported function name #{block}" unless verify_supported_function!(function)
         # should have arguments
-        raise_workflow_error "Opeation blocks should have an arguments block #{block.to_s}" if arguments.nil?
+        raise_workflow_error "Opeation blocks should have an arguments block #{block}" if arguments.nil?
         # arguments should be an array
-        raise_workflow_error "Opeation blocks should have an array in arguments block #{block.to_s}" if !arguments.is_a?(Array)
+        raise_workflow_error "Opeation blocks should have an array in arguments block #{block}" unless arguments.is_a?(Array)
         # check all arguments
-        return arguments.all? {|argument| check_block_in_workflow(argument)}
+        return arguments.all? { |argument| check_block_in_workflow(argument) }
         # check on arguments
         if function == "api_call"
           # should have 3 arguments : verb, target, payload
-          raise_workflow_error "Wrong number of arguments in api_call block - should be 3 "+ block.to_s if arguments.length != 3
+          raise_workflow_error "Wrong number of arguments in api_call block - should be 3 #{block}" if arguments.length != 3
           verify_supported_verb!(arguments[0]["value"]) if arguments[0]["type"] == "value"
-          raise_workflow_error "Argument 2 should be a target in api_call blocks "+ block.to_s if arguments[1]["type"] != "target"
-          raise_workflow_error "Argument 3 should be a payload in api_call blocks "+ block.to_s if arguments[1]["type"] != "payload"
+          raise_workflow_error "Argument 2 should be a target in api_call blocks #{block}" if arguments[1]["type"] != "target"
+          raise_workflow_error "Argument 3 should be a payload in api_call blocks #{block}" if arguments[1]["type"] != "payload"
         elsif function == "convert"
           # should have 2 arguments : dest, value
           verify_supported_conversion_function!(arguments[0]["value"]) if arguments[0]["type"] == "value"
@@ -65,9 +65,9 @@ module Letto
       else
         # if other type, a value
         value = block["value"]
-        raise_workflow_error "Blocks others than operation should have a value "+ block.to_s if value.nil?
+        raise_workflow_error "Blocks others than operation should have a value #{block}" if value.nil?
         if type == "payload"
-          return value.all? {|val| check_block_in_workflow(val)}
+          return value.all? { |val| check_block_in_workflow(val) }
         end
       end
     end
@@ -91,7 +91,5 @@ module Letto
       return true if SUPPORTED_VERBS.include?(verb.upcase)
       raise_workflow_error "Unknown verb: #{node_type}"
     end
-
-
   end
 end

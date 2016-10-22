@@ -3,8 +3,16 @@
   <head>
     <meta charset="utf-8">
     <title>Letto | Admin workflows</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   </head>
   <body>
+    <div id="flash">
+      <% flash.each do |type, message| %>
+      <div class="alert alert-<%= type %>">
+        <%= message %>
+      </div>
+      <% end %>
+    </div>
     <table style="width:100%">
       <tr>
         <td width="30%" valign="top">
@@ -32,6 +40,7 @@
           <% else %>
           <i>No workflows, click "Add Workflow" to add one</i><br />
           <% end %>
+          <br />
           <form action="/workflows" method="get">
             <input type="submit" value="Add Workflow" />
           </form>
@@ -46,7 +55,7 @@
             </form>
           <% else %>
           <form action="/workflows" method="post">
-            <textarea name="content" style="width:100%" rows="30"><%= @content %></textarea>
+            <textarea name="content" style="width:100%" rows="20"><%= @content %></textarea>
             <br />
             <input type="submit" value="Save as new Workflow" />
           </form>

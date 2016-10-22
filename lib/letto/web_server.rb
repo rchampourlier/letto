@@ -193,7 +193,14 @@ module Letto
     end
 
     def config
-      JSON.load(File.read("workflows.json"))
+      workflows = Data::WorkflowRepository.all
+      config = {}
+      config["workflows"] = workflows.map do |workflow|
+        parsed_workflow = JSON.parse(workflow[:content])
+        parsed_workflow["uuid"] = workflow[:uuid]
+        parsed_workflow
+      end
+      config
     end
 
     def render_workflows(content, uuid, flash_messages = nil)
@@ -225,7 +232,6 @@ module Letto
         redirect "/workflows/#{uuid}"
       else
         content = params["content"]
-        puts err_message
         render_workflows(content, nil, danger: err_message)
       end
     end

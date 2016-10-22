@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 require "sinatra/base"
 require "sinatra/namespace"
+require "sinatra/flash"
 require "trello_auth"
 require "data/user_repository"
+require "data/workflow_repository"
 require "values/webhook"
 require "trello_client"
 require "runner"
@@ -17,6 +19,7 @@ module Letto
   # and the incoming webhooks.
   class WebServer < Sinatra::Base
     register Sinatra::Namespace
+    register Sinatra::Flash
     use Rack::Session::Cookie,
       key: "rack.session",
       path: "/",
@@ -72,6 +75,39 @@ module Letto
     get "/" do
       @username = @user[:username] if @user
       erb :home
+    end
+
+    namespace "/workflows" do
+
+      # INDEX, NEW
+      get "" do
+        render_workflows(nil, nil)
+      end
+
+      # SHOW, EDIT
+      get "/:uuid" do
+        selected_workflow = Data::WorkflowRepository.for_uuid(params[:uuid])
+        content = JSON.pretty_generate(JSON.parse(selected_workflow[:content]))
+        selected_uuid = selected_workflow[:uuid]
+        render_workflows(content, selected_uuid)
+      end
+
+      # CREATE
+      post "" do
+        create_or_update_workflow(params)
+      end
+
+      # UPDATE
+      put "/:uuid" do
+        create_or_update_workflow(params)
+      end
+
+      # DELETE
+      delete "/:uuid" do
+        uuid = params[:uuid]
+        Data::WorkflowRepository.delete_by_uuid(uuid)
+        redirect("/workflows")
+      end
     end
 
     namespace "/trello" do
@@ -151,5 +187,39 @@ module Letto
     def config
       JSON.load(File.read("workflows.json"))
     end
+
+    def render_workflows(content, uuid, flash_messages = nil)
+      flash_messages&.each { |k, v| flash[k] = v }
+      @workflows = Data::WorkflowRepository.all
+      @content = content
+      @selected_uuid = uuid
+      erb :workflows
+    end
+
+    def create_or_update_workflow(params)
+      begin
+        content = JSON.parse(params["content"])
+        WorkflowsChecker.check_workflow(content)
+        uuid = params[:uuid]
+        if uuid
+          Data::WorkflowRepository.update_by_uuid(uuid, content: JSON.dump(content))
+        else
+          uuid = Data::WorkflowRepository.create(JSON.dump(content))
+        end
+        successful = true
+      rescue JSON::ParserError => e
+        err_message = "Invalid JSON: #{e.message}"
+      rescue WorkflowsChecker::Error => e
+        err_message = "Invalid JSON content: #{e.message}"
+      end
+      if successful
+        flash[:notice] = "Workflow #{content['name']} saved with id #{uuid}"
+        redirect "/workflows/#{uuid}"
+      else
+        content = params["content"]
+        render_workflows(content, nil, error: err_message)
+      end
+    end
+
   end
 end

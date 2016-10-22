@@ -5,7 +5,6 @@ module Letto
 
   # Handles OAuth1.0a Trello authentication
   class TrelloAuth
-
     attr_reader :access_token, :access_token_secret
 
     TRELLO_OAUTH_CONFIG = {
@@ -54,7 +53,7 @@ module Letto
     end
 
     def clean_session
-      @session[:oauth][:trello] = nil 
+      @session[:oauth][:trello] = nil
     end
 
     def store

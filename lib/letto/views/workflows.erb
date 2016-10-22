@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Letto | Admin workflows</title>
+  </head>
+  <body>
+    <table style="width:100%">
+      <tr>
+        <td width="30%" valign="top">
+          <% unless @workflows.empty? %>
+          <table style="width:100%">
+            <% @workflows.each do | workflow | %>
+            <% uuid = workflow[:uuid] %>
+            <% parsed_content = JSON.parse(workflow[:content]) %>
+            <tr>
+              <td><%= parsed_content['name'] %></td>
+              <td>
+                <form action="/workflows/<%= uuid %>" method="get">
+                  <input type="submit" value="Display" <% if @selected_uuid == uuid %>disabled<%end%> />
+                </form>
+              </td>
+              <td>
+                <form action="/workflows/<%= uuid %>" method="post">
+                  <input type="hidden" name="_method" value="delete" />
+                  <input type="submit" value="Delete" />
+                </form>
+              </td>
+            </tr>
+            <% end %>
+          </table>
+          <% else %>
+          <i>No workflows, click "Add Workflow" to add one</i><br />
+          <% end %>
+          <form action="/workflows" method="get">
+            <input type="submit" value="Add Workflow" />
+          </form>
+        </td>
+        <td width="70%">
+          <% if @selected_uuid %>
+            <form action="/workflows/<%= @selected_uuid %>" method="post">
+              <input type="hidden" name="_method" value="put" />
+              <textarea name="content" style="width:100%" rows="30"><%= @content %></textarea>
+              <br />
+              <input type="submit" value="Save Workflow">
+            </form>
+          <% else %>
+          <form action="/workflows" method="post">
+            <textarea name="content" style="width:100%" rows="30"><%= @content %></textarea>
+            <br />
+            <input type="submit" value="Save as new Workflow" />
+          </form>
+          <% end %>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

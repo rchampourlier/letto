@@ -7,6 +7,9 @@ gem "sinatra"
 gem "sinatra-contrib"
 gem "puma"
 
+# Sinatra extensions
+gem "sinatra-flash"
+
 # For the console
 gem "pry"
 gem "awesome_print"
@@ -47,4 +50,5 @@ group :test do
   # gem "simplecov-json", require: false
   # gem "simplecov-lcov", require: false
   gem "timecop"
+  gem "sinatra-sessionography"
 end

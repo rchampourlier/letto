@@ -213,25 +213,26 @@ module Letto
 
     def create_or_update_workflow(params)
       begin
-        content = JSON.parse(params["content"])
-        WorkflowsChecker.check_workflow(content)
+        parsed_content = JSON.parse(params["content"])
+        WorkflowsChecker.check_workflow(parsed_content)
         uuid = params[:uuid]
         if uuid
-          Data::WorkflowRepository.update_by_uuid(uuid, content: JSON.dump(content))
+          Data::WorkflowRepository.update_by_uuid(uuid, content: JSON.dump(parsed_content))
         else
-          uuid = Data::WorkflowRepository.create(JSON.dump(content))
+          uuid = Data::WorkflowRepository.create(JSON.dump(parsed_content))
         end
         successful = true
       rescue JSON::ParserError => e
         err_message = "Invalid JSON: #{e.message}"
+        content = params["content"]
       rescue WorkflowsChecker::Error => e
         err_message = "Invalid JSON content: #{e.message}"
+        content = JSON.pretty_generate(parsed_content)
       end
       if successful
-        flash[:success] = "Workflow #{content['name']} saved with id #{uuid}"
+        flash[:success] = "Workflow #{parsed_content['name']} saved with id #{uuid}"
         redirect "/workflows/#{uuid}"
       else
-        content = params["content"]
         render_workflows(content, nil, danger: err_message)
       end
     end

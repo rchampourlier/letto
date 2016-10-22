@@ -20,7 +20,7 @@ def usage_and_exit
   exit(1)
 end
 
-usage_and_exit unless %w(production).include?(target)
+usage_and_exit unless %w(heroku).include?(target)
 
 cmd = "git push #{target} #{branch}:#{REMOTE_BRANCH}"
 system cmd

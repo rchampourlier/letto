@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 module Letto
 
+  # Checker for workflows structures
   class WorkflowsChecker
     SUPPORTED_NODE_TYPES = %w(expression operation value target payload).freeze
     SUPPORTED_FUNCTION_NAMES = %w(add api_call map min convert extract get_linkedin_photo).freeze
@@ -50,14 +51,14 @@ module Letto
         # arguments should be an array
         raise_workflow_error "Opeation blocks should have an array in arguments block #{block}" unless arguments.is_a?(Array)
         # check all arguments
-        return arguments.all? { |argument| check_block_in_workflow(argument) }
+        arguments.all? { |argument| check_block_in_workflow(argument) }
         # check on arguments
         if function == "api_call"
           # should have 3 arguments : verb, target, payload
-          raise_workflow_error "Wrong number of arguments in api_call block - should be 3 #{block}" if arguments.length != 3
+          raise_workflow_error "Wrong number of arguments in api_call block - should be 2 or 3 #{block}" unless arguments.length == 3 || arguments.length == 2
           verify_supported_verb!(arguments[0]["value"]) if arguments[0]["type"] == "value"
           raise_workflow_error "Argument 2 should be a target in api_call blocks #{block}" if arguments[1]["type"] != "target"
-          raise_workflow_error "Argument 3 should be a payload in api_call blocks #{block}" if arguments[1]["type"] != "payload"
+          raise_workflow_error "Argument 3 should be a payload in api_call blocks #{block}" if arguments.length == 3 && arguments[2]["type"] != "payload"
         elsif function == "convert"
           # should have 2 arguments : dest, value
           verify_supported_conversion_function!(arguments[0]["value"]) if arguments[0]["type"] == "value"

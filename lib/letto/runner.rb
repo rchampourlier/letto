@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "workflows_checker"
-require 'rubygems'
-require 'nokogiri'
-require 'open-uri'
+require "rubygems"
+require "nokogiri"
+require "open-uri"
 
 module Letto
 
@@ -49,14 +49,11 @@ module Letto
       type = condition["type"]
       expected_values = condition["value"]
       path = condition["path"]
-      if expected_values.is_a?(Array)
-        expected_values.each do |expected_value|
-          return true if verify_workflow_condition(type, expected_value, path, webhook)
-        end
-        false
-      else
-        return verify_workflow_condition(type, expected_values, path, webhook)
+      return verify_workflow_condition(type, expected_values, path, webhook) unless expected_values.is_a?(Array)
+      expected_values.each do |expected_value|
+        return true if verify_workflow_condition(type, expected_value, path, webhook)
       end
+      false
     end
 
     def verify_workflow_condition(type, expected_value, path, webhook)
@@ -80,8 +77,8 @@ module Letto
 
     def evaluate_payload(node, data, webhook_id = nil)
       payload = node["value"]
-      payload.each_with_object({}) do |(argument, node), evaluated_args|
-        evaluated_args[argument] = evaluate_node(node, data, webhook_id)
+      payload.each_with_object({}) do |(argument, subnode), evaluated_args|
+        evaluated_args[argument] = evaluate_node(subnode, data, webhook_id)
       end
     end
 
@@ -115,16 +112,16 @@ module Letto
       arguments[0] + apply_function_add(arguments[1..-1])
     end
 
-    def apply_function_api_call(arguments, data, webhook_id)
+    def apply_function_api_call(arguments, _data, webhook_id)
       verb = arguments[0]
       target = arguments[1]
       payload = arguments[2]
-      trello_client = @users_webhooks_cache.trello_client_from_callback(webhook_id);
+      trello_client = @users_webhooks_cache.trello_client_from_callback(webhook_id)
       JSON.load(trello_client.api_call(verb, target, payload))
     end
 
     def apply_function_min(arguments, _data, _webhook_id = nil)
-      if (arguments.length > 1 && arguments.find {|a| a.class == "Array"})
+      if arguments.length > 1 && arguments.find { |a| a.class == "Array" }
         raise "function min takes 1 array as argument or multiple simple values"
       end
       arguments.flatten.compact.min
@@ -153,17 +150,20 @@ module Letto
     def apply_function_convert(arguments, _data, _webhook_id = nil)
       dest_type = arguments[0]
       value = arguments[1]
-      return DateTime.parse(value) if dest_type == "DateTime" 
-      return send(:"#{dest_type}", value)
+      return DateTime.parse(value) if dest_type == "DateTime"
+      send(:"#{dest_type}", value)
     end
 
     def apply_function_get_linkedin_photo(arguments, _data, _webhook_id = nil)
       linkedin_url = arguments[0]
-      linkedin_verifier = /(https?:\/\/www.linkedin.com\/in\/.*)\??/
+      linkedin_verifier = %r{(https?://www.linkedin.com/in/.*)\??}
       parsed_url = linkedin_url[linkedin_verifier, 1]
       raise "Not a linkedin url #{linkedin_url}" if parsed_url.nil?
       linkedin_selector = "div.profile-picture * img[data-delayed-url]"
-      source = Nokogiri::HTML(open(linkedin_url,"User-Agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36"))
+      source = Nokogiri::HTML(open(
+        linkedin_url,
+        "User-Agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36"
+      ))
       source.css(linkedin_selector)[0]["data-delayed-url"]
     end
 

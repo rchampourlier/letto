@@ -8,32 +8,25 @@ module Letto
 
       def self.create(content)
         uuid = generate_uuid
-        db[:workflows].insert(
-          row(
-            uuid: uuid,
-            content: content
-          )
+        insert(
+          uuid: uuid,
+          content: content
         )
         uuid
       end
 
       def self.for_uuid(uuid)
         return nil if uuid.nil?
-        db[:workflows].where(uuid: uuid.to_s).first
+        first_where(uuid: uuid.to_s)
       end
 
       def self.update_by_uuid(uuid, values)
-        db[:workflows].where(uuid: uuid.to_s).update(values)
+        update_where({ uuid: uuid.to_s }, values)
       end
 
       def self.delete_by_uuid(uuid)
         delete(uuid: uuid.to_s)
       end
-
-      def self.all()
-        db[:workflows]
-      end
-
     end
   end
 end

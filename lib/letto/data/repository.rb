@@ -32,6 +32,18 @@ module Letto
         table.where(where_data).delete
       end
 
+      def self.update_where(where_data, values)
+        table.where(where_data).update(values)
+      end
+
+      def self.first_where(where_data)
+        table.where(where_data).first
+      end
+
+      def self.all
+        table
+      end
+
       def self.table
         repository_resource = name.split("::").last.gsub(/Repository\Z/, "")
         db[repository_resource.pluralize.underscore.to_sym]

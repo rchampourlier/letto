@@ -181,15 +181,8 @@ module Letto
 
     def handle_incoming_webhook(webhook_id, request)
       webhook = Letto::Values::Webhook.with_request(webhook_id, request)
-      write_webhook(webhook)
       Runner.new(config, UsersWebhooksCache).handle_webhook(webhook)
       { status: "ok" }.to_json
-    end
-
-    def write_webhook(webhook)
-      if false && ENV["RACK_ENV"] == "development"
-        File.write("webhook.json", webhook.parsed_body.to_json)
-      end
     end
 
     def config

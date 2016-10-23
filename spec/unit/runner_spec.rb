@@ -15,7 +15,7 @@ describe Letto::Runner do
   let(:config) { {} }
   let(:trello_client) { double("TrelloClient") }
   let(:users_webhooks_cache) { double("UsersWebhooksCache", trello_client_from_callback: trello_client) }
-  
+
   subject { described_class.new(config, users_webhooks_cache) }
 
   before(:each) do
@@ -32,7 +32,7 @@ describe Letto::Runner do
       end
 
       it "returns 2" do
-        webhook = build_webhook()
+        webhook = build_webhook
         execute_action = subject.execute_action(action, webhook)
         expect(execute_action).to eq(2)
       end
@@ -84,7 +84,7 @@ describe Letto::Runner do
       end
 
       it "returns 6" do
-        webhook = build_webhook()
+        webhook = build_webhook
         execute_action = subject.execute_action(action, webhook)
         expect(execute_action).to eq(6)
       end
@@ -113,7 +113,7 @@ describe Letto::Runner do
       end
 
       it "returns 1" do
-        webhook = build_webhook()
+        webhook = build_webhook
         execute_action = subject.execute_action(action, webhook)
         expect(execute_action).to eq(1)
       end
@@ -146,7 +146,7 @@ describe Letto::Runner do
       end
 
       it "returns ['active contact']" do
-        webhook = build_webhook()
+        webhook = build_webhook
         execute_action = subject.execute_action(action, webhook)
         expect(execute_action).to eq(["active contact"])
       end
@@ -159,8 +159,8 @@ describe Letto::Runner do
           "function" => "map",
           "arguments" => [
             {
-              "type"=> "value",
-              "value" => [ "active contact" ]
+              "type" => "value",
+              "value" => ["active contact"]
             },
             {
               "type" => "value",
@@ -174,7 +174,7 @@ describe Letto::Runner do
       end
 
       it "returns [7]" do
-        webhook = build_webhook()
+        webhook = build_webhook
         execute_action = subject.execute_action(action, webhook)
         expect(execute_action).to eq([7])
       end
@@ -188,7 +188,7 @@ describe Letto::Runner do
             "function" => "convert",
             "arguments" => [
               {
-                "type"=> "value",
+                "type" => "value",
                 "value" => "DateTime"
               },
               {
@@ -200,7 +200,7 @@ describe Letto::Runner do
         end
 
         it "returns an object DateTime from the parsed string" do
-          webhook = build_webhook()
+          webhook = build_webhook
           execute_action = subject.execute_action(action, webhook)
           expect(execute_action).to eq(DateTime.parse("2016-10-03T20:09:32.301Z"))
         end
@@ -213,7 +213,7 @@ describe Letto::Runner do
             "function" => "convert",
             "arguments" => [
               {
-                "type"=> "value",
+                "type" => "value",
                 "value" => "String"
               },
               {
@@ -225,7 +225,7 @@ describe Letto::Runner do
         end
 
         it "returns a string \"2016\"" do
-          webhook = build_webhook()
+          webhook = build_webhook
           execute_action = subject.execute_action(action, webhook)
           expect(execute_action).to eq("2016")
         end
@@ -244,7 +244,7 @@ describe Letto::Runner do
             },
             {
               "type" => "target",
-              "value" => "/cards/{{ action.card.id }}",
+              "value" => "/cards/{{ action.card.id }}"
             },
             {
               "type" => "payload",
@@ -336,6 +336,138 @@ describe Letto::Runner do
       end
     end
 
+    describe "string_comparison condition" do
+      let(:config) do
+        {
+          "workflows" => [
+            {
+              "name" => "someWorkflow",
+              "webhook_id" => "id",
+              "conditions" => [
+                {
+                  "type" => "string_comparison",
+                  "path" => "action.type",
+                  "value" => "addLabelToCard"
+                }
+              ]
+            }
+          ]
+        }
+      end
+
+      context "matching" do
+        it "returns 1 workflow" do
+          webhook = build_webhook(
+            body: {
+              "action" => { "type" => "addLabelToCard" }
+            }
+          )
+          matching_workflows = subject.matching_workflows(webhook)
+          expect(matching_workflows.count).to eq(1)
+        end
+      end
+
+      context "non-matching" do
+        it "returns 0 workflows" do
+          webhook = build_webhook(
+            body: {
+              "action" => { "type" => "other" }
+            }
+          )
+          matching_workflows = subject.matching_workflows(webhook)
+          expect(matching_workflows.count).to eq(0)
+        end
+      end
+    end
+
+    describe "string_comparison condition" do
+      let(:config) do
+        {
+          "workflows" => [
+            {
+              "name" => "someWorkflow",
+              "webhook_id" => "id",
+              "conditions" => [
+                {
+                  "type" => "string_comparison",
+                  "path" => "action.type",
+                  "value" => "addLabelToCard"
+                }
+              ]
+            }
+          ]
+        }
+      end
+
+      context "matching" do
+        it "returns 1 workflow" do
+          webhook = build_webhook(
+            body: {
+              "action" => { "type" => "addLabelToCard" }
+            }
+          )
+          matching_workflows = subject.matching_workflows(webhook)
+          expect(matching_workflows.count).to eq(1)
+        end
+      end
+
+      context "non-matching" do
+        it "returns 0 workflows" do
+          webhook = build_webhook(
+            body: {
+              "action" => { "type" => "other" }
+            }
+          )
+          matching_workflows = subject.matching_workflows(webhook)
+          expect(matching_workflows.count).to eq(0)
+        end
+      end
+    end
+
+    describe "regex_comparison condition" do
+      let(:config) do
+        {
+          "workflows" => [
+            {
+              "name" => "someWorkflow",
+              "webhook_id" => "id",
+              "conditions" => [
+                {
+                  "type" => "regex_comparison",
+                  "path" => "action.type",
+                  "value" => "add.*"
+                }
+              ]
+            }
+          ]
+        }
+      end
+
+      context "matching" do
+        it "returns 1 workflow" do
+          webhook = build_webhook(
+            body: {
+              "action" => { "type" => "addLabelToCard" }
+            }
+          )
+          matching_workflows = subject.matching_workflows(webhook)
+          expect(matching_workflows.count).to eq(1)
+        end
+      end
+
+      context "non-matching" do
+        it "returns 0 workflows" do
+          webhook = build_webhook(
+            body: {
+              "action" => { "type" => "other" }
+            }
+          )
+          matching_workflows = subject.matching_workflows(webhook)
+          expect(matching_workflows.count).to eq(0)
+        end
+      end
+    end
+
     describe "multiple matchings workflows" do
       let(:config) do
         {
@@ -347,7 +479,7 @@ describe Letto::Runner do
                 {
                   "type" => "string_comparison",
                   "path" => "action.type",
-                  "value" => ["addLabelToCard", "cardCreated"]
+                  "value" => %w(addLabelToCard cardCreated)
                 }
               ]
             }

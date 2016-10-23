@@ -39,7 +39,6 @@ describe "Letto::WebServer" do
     get "/workflows/1"
   end
 
-
   describe "GET /workflows/1" do
     it "displays the list of workflows" do
       expect(last_response.body).to include("gna")

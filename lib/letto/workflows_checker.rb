@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 module Letto
 
+  # Checker for workflows structures
   class WorkflowsChecker
     SUPPORTED_NODE_TYPES = %w(expression operation value target payload).freeze
     SUPPORTED_FUNCTION_NAMES = %w(add api_call map min convert extract get_linkedin_photo).freeze
@@ -50,7 +51,7 @@ module Letto
         # arguments should be an array
         raise_workflow_error "Opeation blocks should have an array in arguments block #{block}" unless arguments.is_a?(Array)
         # check all arguments
-        return arguments.all? { |argument| check_block_in_workflow(argument) }
+        arguments.all? { |argument| check_block_in_workflow(argument) }
         # check on arguments
         if function == "api_call"
           # should have 3 arguments : verb, target, payload

@@ -15,7 +15,7 @@ module Letto
     def initialize(config, users_webhooks_cache)
       @config = config
       @users_webhooks_cache = users_webhooks_cache
-      WorkflowsChecker.check_workflows(workflows)
+      WorkflowsChecker.check_workflows!(workflows)
     end
 
     def handle_webhook(webhook)

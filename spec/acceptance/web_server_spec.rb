@@ -60,14 +60,14 @@ describe "Letto::WebServer" do
       context "invalid workflow" do
         it "displays flash error" do
           send(verb, url, content: "{}")
-          expect(last_response.body).to include("Invalid JSON content: Workflows should have a name")
+          expect(last_response.body).to include("Invalid JSON content: Workflow should have a name")
         end
       end
 
       context "valid workflow" do
         let(:content) { JSON.dump(name: "gna") }
         it "displays flash notice" do
-          allow(Letto::WorkflowsChecker).to receive(:check_workflow).and_return(true)
+          allow(Letto::WorkflowsChecker).to receive(:check_workflow!).and_return(true)
           if verb == :post
             expect(Letto::Data::WorkflowRepository).
               to receive(:create).

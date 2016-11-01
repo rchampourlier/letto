@@ -207,7 +207,7 @@ module Letto
     def create_or_update_workflow(params)
       begin
         parsed_content = JSON.parse(params["content"])
-        WorkflowsChecker.check_workflow(parsed_content)
+        WorkflowsChecker.check_workflow!(parsed_content)
         uuid = params[:uuid]
         if uuid
           Data::WorkflowRepository.update_by_uuid(uuid, content: JSON.dump(parsed_content))

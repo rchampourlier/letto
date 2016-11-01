@@ -19,7 +19,7 @@ describe Letto::Runner do
   subject { described_class.new(config, users_webhooks_cache) }
 
   before(:each) do
-    allow(Letto::WorkflowsChecker).to receive(:check_workflows).and_return(true)
+    allow(Letto::WorkflowsChecker).to receive(:check_workflows!).and_return(true)
   end
 
   describe "execute_action" do

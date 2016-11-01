@@ -67,11 +67,16 @@ module Letto
       raise "Unknown condition type: #{condition['type']}"
     end
 
-    def evaluate_target(node, data, _webhook_id = nil)
+    def evaluate_expression(node, data, _webhook_id = nil)
       raw_target = node["value"]
+      return raw_target unless raw_target.is_a?(String)
+
       re = /{{(.*)}}/
-      expression = raw_target[re, 1].strip
-      evaluated_expression = evaluate_expression({ "value" => expression }, data)
+      expression = raw_target[re, 1]
+      return raw_target unless expression
+
+      expression = expression.strip
+      evaluated_expression = data.dig(*expression.split("."))
       raw_target.gsub(re, evaluated_expression)
     end
 
@@ -87,17 +92,9 @@ module Letto
       send(:"evaluate_#{node_type}", node, data, webhook_id)
     end
 
-    def evaluate_expression(node, data, _webhook_id = nil)
-      data.dig(*node["value"].split("."))
-    end
-
     def evaluate_operation(node, data, webhook_id)
       evaluated_arguments = node["arguments"].map { |a| evaluate_node(a, data, webhook_id) }
       apply_function(node["function"], evaluated_arguments, data, webhook_id)
-    end
-
-    def evaluate_value(node, _data, _webhook_id = nil)
-      node["value"]
     end
 
     def apply_function(function_name, arguments, data, webhook_id)

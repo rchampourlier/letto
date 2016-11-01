@@ -23,41 +23,66 @@ describe Letto::Runner do
   end
 
   describe "execute_action" do
-    context "evaluate_value" do
-      let(:action) do
-        {
-          "type" => "value",
-          "value" => 2
-        }
-      end
-
-      it "returns 2" do
-        webhook = build_webhook
-        execute_action = subject.execute_action(action, webhook)
-        expect(execute_action).to eq(2)
-      end
-    end
-
     context "evaluate_expression" do
-      let(:action) do
-        {
-          "type" => "expression",
-          "value" => "action.card.id"
-        }
+      context "static value" do
+        let(:action) do
+          {
+            "type" => "expression",
+            "value" => 2
+          }
+        end
+
+        it "returns 2" do
+          webhook = build_webhook
+          execute_action = subject.execute_action(action, webhook)
+          expect(execute_action).to eq(2)
+        end
       end
 
-      it "returns the card ID" do
-        webhook = build_webhook(
-          body: {
-            "action" => {
-              "card" => {
-                "id" => "card_id"
+      context "interpoled only" do
+        let(:action) do
+          {
+            "type" => "expression",
+            "value" => "{{ action.card.id }}"
+          }
+        end
+
+        it "returns the card ID" do
+          webhook = build_webhook(
+            body: {
+              "action" => {
+                "card" => {
+                  "id" => "card_id"
+                }
               }
             }
+          )
+          execute_action = subject.execute_action(action, webhook)
+          expect(execute_action).to eq("card_id")
+        end
+      end
+
+      context "composed value" do
+        let(:action) do
+          {
+            "type" => "expression",
+            "value" => "card id: {{ action.card.id }}"
           }
-        )
-        execute_action = subject.execute_action(action, webhook)
-        expect(execute_action).to eq("card_id")
+        end
+
+        it "returns the card ID prefixed by card id:" do
+          webhook = build_webhook(
+            body: {
+              "action" => {
+                "card" => {
+                  "id" => "card_id"
+                }
+              }
+            }
+          )
+          execute_action = subject.execute_action(action, webhook)
+          expect(execute_action).to eq("card id: card_id")
+        end
       end
     end
 
@@ -68,15 +93,15 @@ describe Letto::Runner do
           "function" => "add",
           "arguments" => [
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => 1
             },
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => 2
             },
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => 3
             }
           ]
@@ -97,15 +122,15 @@ describe Letto::Runner do
           "function" => "min",
           "arguments" => [
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => 2
             },
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => 1
             },
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => 3
             }
           ]
@@ -126,11 +151,11 @@ describe Letto::Runner do
           "function" => "extract",
           "arguments" => [
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => "name"
             },
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => [
                 {
                   "id" => "56e27c9f152c3f92fd605034",
@@ -159,11 +184,11 @@ describe Letto::Runner do
           "function" => "map",
           "arguments" => [
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => ["active contact"]
             },
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => {
                 "active contact" => 7,
                 "passive contact" => 30
@@ -188,11 +213,11 @@ describe Letto::Runner do
             "function" => "convert",
             "arguments" => [
               {
-                "type" => "value",
+                "type" => "expression",
                 "value" => "DateTime"
               },
               {
-                "type" => "value",
+                "type" => "expression",
                 "value" => "2016-10-03T20:09:32.301Z"
               }
             ]
@@ -213,11 +238,11 @@ describe Letto::Runner do
             "function" => "convert",
             "arguments" => [
               {
-                "type" => "value",
+                "type" => "expression",
                 "value" => "String"
               },
               {
-                "type" => "value",
+                "type" => "expression",
                 "value" => 2016
               }
             ]
@@ -239,18 +264,18 @@ describe Letto::Runner do
           "function" => "api_call",
           "arguments" => [
             {
-              "type" => "value",
+              "type" => "expression",
               "value" => "POST"
             },
             {
-              "type" => "target",
+              "type" => "expression",
               "value" => "/cards/{{ action.card.id }}"
             },
             {
               "type" => "payload",
               "value" => {
                 "due" => {
-                  "type" => "value",
+                  "type" => "expression",
                   "value" => "due"
                 }
               }

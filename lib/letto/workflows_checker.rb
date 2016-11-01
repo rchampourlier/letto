@@ -30,47 +30,59 @@ module Letto
       # shouls have an action
       raise_workflow_error "Workflows should have an action (#{name})" if workflow["action"].nil?
       # each block in action shoud
-      check_block_in_workflow(workflow["action"])
+      check_block_in_workflow!(workflow["action"])
     end
 
-    def self.check_block_in_workflow(block)
+    def self.check_block_in_workflow!(block)
       type = block["type"]
       # should have a type
       raise_workflow_error "Blocks should have a type #{block}" if type.nil?
       # should be a supported type
       raise_workflow_error "Blocks should have a supported type #{block}" unless verify_supported_node_type!(type)
       if type == "operation"
-        function = block["function"]
-        arguments = block["arguments"]
-        # should have a function name
-        raise_workflow_error "Opeation blocks should have a function name block #{block}" if function.nil?
-        # should be a supported function
-        raise_workflow_error "Opeation blocks should have a supported function name #{block}" unless verify_supported_function!(function)
-        # should have arguments
-        raise_workflow_error "Opeation blocks should have an arguments block #{block}" if arguments.nil?
-        # arguments should be an array
-        raise_workflow_error "Opeation blocks should have an array in arguments block #{block}" unless arguments.is_a?(Array)
-        # check all arguments
-        arguments.all? { |argument| check_block_in_workflow(argument) }
-        # check on arguments
-        if function == "api_call"
-          # should have 3 arguments : verb, target, payload
-          raise_workflow_error "Wrong number of arguments in api_call block - should be 2 or 3 #{block}" unless arguments.length == 3 || arguments.length == 2
-          verify_supported_verb!(arguments[0]["value"]) if arguments[0]["type"] == "value"
-          raise_workflow_error "Argument 2 should be a target in api_call blocks #{block}" if arguments[1]["type"] != "target"
-          raise_workflow_error "Argument 3 should be a payload in api_call blocks #{block}" if arguments.length == 3 && arguments[2]["type"] != "payload"
-        elsif function == "convert"
-          # should have 2 arguments : dest, value
-          verify_supported_conversion_function!(arguments[0]["value"]) if arguments[0]["type"] == "value"
-        end
+        check_operation_block!(block)
       else
         # if other type, a value
         value = block["value"]
         raise_workflow_error "Blocks others than operation should have a value #{block}" if value.nil?
         if type == "payload"
-          return value.all? { |val| check_block_in_workflow(val) }
+          return value.each { |val| check_block_in_workflow!(val) }
         end
       end
+    end
+
+    def self.check_operation_block!(block)
+      function = block["function"]
+      arguments = block["arguments"]
+      # should have a function name
+      raise_workflow_error "Operation blocks should have a function name block #{block}" if function.nil?
+      # should be a supported function
+      raise_workflow_error "Operation blocks should have a supported function name #{block}" unless verify_supported_function!(function)
+      # should have arguments
+      raise_workflow_error "Operation blocks should have an arguments block #{block}" if arguments.nil?
+      # arguments should be an array
+      raise_workflow_error "Operation blocks should have an array in arguments block #{block}" unless arguments.is_a?(Array)
+      # check all arguments
+      arguments.each { |argument| check_block_in_workflow!(argument) }
+      # check on arguments
+      if function == "api_call"
+        check_operation_api_call_block!(block)
+      elsif function == "convert"
+        check_operation_convert_block!(block)
+      end
+    end
+
+    def self.check_operation_api_call_block!(block)
+      # should have 3 arguments : verb, target, payload
+      raise_workflow_error "Wrong number of arguments in api_call block - should be 2 or 3 #{block}" unless arguments.length == 3 || arguments.length == 2
+      verify_supported_verb!(arguments[0]["value"]) if arguments[0]["type"] == "value"
+      raise_workflow_error "Argument 2 should be a target in api_call blocks #{block}" if arguments[1]["type"] != "target"
+      raise_workflow_error "Argument 3 should be a payload in api_call blocks #{block}" if arguments.length == 3 && arguments[2]["type"] != "payload"
+    end
+
+    def self.check_operation_convert_block!(block)
+      # should have 2 arguments : dest, value
+      verify_supported_conversion_function!(arguments[0]["value"]) if arguments[0]["type"] == "value"
     end
 
     def self.verify_supported_node_type!(node_type)

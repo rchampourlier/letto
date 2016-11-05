@@ -45,7 +45,6 @@ group :test do
   gem "rack-test"
   gem "rspec"
   gem "webmock"
-  gem "coveralls", require: false
   gem "simplecov", require: false
   gem "timecop"
   gem "sinatra-sessionography"

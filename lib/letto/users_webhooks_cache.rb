@@ -5,7 +5,19 @@ require "data/user_repository"
 module Letto
 
   # Cache to access users registered webhooks
+  #
+  # Fetches all Trello webhooks through the API for each user in the
+  # database with valid OAuth tokens.
+  #
+  # If the OAuth tokens are not valid, they are removed from the database.
+  #
+  # This cache enables identifying the user from a webhook's ID so that
+  # we can perform Trello API calls on its behalf by using its OAuth
+  # tokens.
   class UsersWebhooksCache
+
+    # Loads the webhooks for every user in the database, using
+    # the Trello API.
     def self.load(webhook_url_root: "")
       users = Data::UserRepository.all
       @user_webhooks_cache = {}
@@ -23,6 +35,7 @@ module Letto
           callback_url = webhook[:callback_url]
           callback_id = callback_url.gsub("#{webhook_url_root}/", "")
           @user_webhooks_cache[callback_id] = {
+            uuid: user[:uuid],
             access_token: user[:trello_access_token],
             access_token_secret: user[:atrello_ccess_token_secret]
           }
@@ -30,8 +43,9 @@ module Letto
       end
     end
 
-    def self.add_callback_to_cache(callback_id, access_token, access_token_secret)
+    def self.add_callback_to_cache(callback_id, user_uuid, access_token, access_token_secret)
       @user_webhooks_cache[callback_id] = {
+        uuid: user_uuid,
         access_token: access_token,
         access_token_secret: access_token_secret
       }
@@ -41,10 +55,10 @@ module Letto
       @user_webhooks_cache.delete(callback_id)
     end
 
-    def self.trello_client_from_callback(callback_url)
-      return nil if callback_url.nil?
-      access_token = @user_webhooks_cache[callback_url][:access_token]
-      access_token_secret = @user_webhooks_cache[callback_url][:access_token_secret]
+    def self.trello_client_from_callback(callback_id)
+      return nil if callback_id.nil?
+      access_token = @user_webhooks_cache[callback_id][:access_token]
+      access_token_secret = @user_webhooks_cache[callback_id][:access_token_secret]
       TrelloClient.new(access_token, access_token_secret)
     end
   end

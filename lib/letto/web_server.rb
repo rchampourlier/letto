@@ -144,6 +144,7 @@ module Letto
         )
         UsersWebhooksCache.add_callback_to_cache(
           trello_webhook_id,
+          user[:uuid],
           user[:trello_access_token],
           user[:trello_access_token_secret]
         )

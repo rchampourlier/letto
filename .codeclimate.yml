@@ -1,6 +1,14 @@
 engines:
   rubocop:
     enabled: true
+  brakeman:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - ruby
+      - javascript
 ratings:
   paths:
     - config/**

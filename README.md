@@ -1,8 +1,9 @@
 
 
 [![Build Status](https://travis-ci.org/rchampourlier/letto.svg?branch=master)](https://travis-ci.org/rchampourlier/letto)
-[![Code Climate](https://codeclimate.com/repos/5659c9ee09af1e152f00d540/badges/d4a9abf44cad651805e5/gpa.svg)](https://codeclimate.com/repos/5659c9ee09af1e152f00d540/feed)
-[![Coverage Status](https://coveralls.io/repos/github/rchampourlier/letto/badge.svg?branch=master)](https://coveralls.io/github/rchampourlier/letto?branch=master)
+[![Code Climate](https://codeclimate.com/github/rchampourlier/letto/badges/gpa.svg)](https://codeclimate.com/github/rchampourlier/letto)
+[![Test Coverage](https://codeclimate.com/github/rchampourlier/letto/badges/coverage.svg)](https://codeclimate.com/github/rchampourlier/letto/coverage)
+[![Issue Count](https://codeclimate.com/github/rchampourlier/letto/badges/issue_count.svg)](https://codeclimate.com/github/rchampourlier/letto)
 
 ## Purpose
 

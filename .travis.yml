@@ -11,5 +11,5 @@ env:
     - RACK_ENV=test
     - DATABASE_URL=postgres://postgresql@localhost:5432/travis_ci_test
 addons:
-    code_climate:
-        repo_token: fccc18f8d93ac8f23dcb8673a20e9074b927b696aebbb6e2e5afe8ba7ed73e47
+  code_climate:
+    repo_token: fccc18f8d93ac8f23dcb8673a20e9074b927b696aebbb6e2e5afe8ba7ed73e47

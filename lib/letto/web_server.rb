@@ -182,12 +182,13 @@ module Letto
 
     def handle_incoming_webhook(webhook_id, request)
       webhook = Letto::Values::Webhook.with_request(webhook_id, request)
-      Runner.new(config, UsersWebhooksCache).handle_webhook(webhook)
+      user_uuid = UsersWebhooksCache.user_uuid_from_callback(webhook_id)
+      Runner.new(config(user_uuid), UsersWebhooksCache).handle_webhook(webhook) unless user_uuid.nil?
       { status: "ok" }.to_json
     end
 
-    def config
-      workflows = Data::WorkflowRepository.all
+    def config(user_uuid)
+      workflows = Data::WorkflowRepository.for_user(user_uuid)
       config = {}
       config["workflows"] = workflows.map do |workflow|
         parsed_workflow = JSON.parse(workflow[:content])
@@ -199,7 +200,7 @@ module Letto
 
     def render_workflows(content, uuid, flash_messages = nil)
       flash_messages&.each { |k, v| flash.now[k] = v }
-      @workflows = Data::WorkflowRepository.all
+      @workflows = Data::WorkflowRepository.for_user(user[:uuid])
       @content = content
       @selected_uuid = uuid
       erb :workflows
@@ -213,7 +214,7 @@ module Letto
         if uuid
           Data::WorkflowRepository.update_by_uuid(uuid, content: JSON.dump(parsed_content))
         else
-          uuid = Data::WorkflowRepository.create(JSON.dump(parsed_content))
+          uuid = Data::WorkflowRepository.create(user[:uuid], JSON.dump(parsed_content))
         end
         successful = true
       rescue JSON::ParserError => e

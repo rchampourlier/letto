@@ -55,6 +55,11 @@ module Letto
       @user_webhooks_cache.delete(callback_id)
     end
 
+    def self.user_uuid_from_callback(callback_id)
+      return nil if @user_webhooks_cache[callback_id].nil?
+      @user_webhooks_cache[callback_id][:uuid]
+    end
+
     def self.trello_client_from_callback(callback_id)
       return nil if callback_id.nil?
       access_token = @user_webhooks_cache[callback_id][:access_token]

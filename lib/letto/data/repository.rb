@@ -29,15 +29,19 @@ module Letto
       end
 
       def self.delete(where_data)
-        table.where(where_data).delete
+        where(where_data).delete
       end
 
       def self.update_where(where_data, values)
-        table.where(where_data).update(values)
+        where(where_data).update(values)
       end
 
       def self.first_where(where_data)
-        table.where(where_data).first
+        where(where_data).first
+      end
+
+      def self.where(where_data)
+        table.where(where_data)
       end
 
       def self.all

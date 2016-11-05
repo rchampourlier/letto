@@ -6,13 +6,19 @@ module Letto
     # Handle workflows data
     class WorkflowRepository < Repository
 
-      def self.create(content)
+      def self.create(user_uuid, content)
         uuid = generate_uuid
         insert(
           uuid: uuid,
+          user_uuid: user_uuid,
           content: content
         )
         uuid
+      end
+
+      def self.for_user(user_uuid)
+        return nil if user_uuid.nil?
+        where(user_uuid: user_uuid.to_s)
       end
 
       def self.for_uuid(uuid)

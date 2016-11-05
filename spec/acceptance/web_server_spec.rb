@@ -30,12 +30,13 @@ describe "Letto::WebServer" do
     }
   end
   before do
-    allow(Letto::Data::WorkflowRepository).to receive(:all).and_return(
+    allow(Letto::Data::WorkflowRepository).to receive(:for_user).and_return(
       [workflow]
     )
     allow(Letto::Data::WorkflowRepository).to receive(:for_uuid).and_return(
       workflow
     )
+    allow(Letto::Data::UserRepository).to receive(:for_session_id).and_return(uuid: "uuid")
     get "/workflows/1"
   end
 
@@ -71,7 +72,7 @@ describe "Letto::WebServer" do
           if verb == :post
             expect(Letto::Data::WorkflowRepository).
               to receive(:create).
-              with(content).
+              with("uuid", content).
               and_return(1)
           else
             expect(Letto::Data::WorkflowRepository).

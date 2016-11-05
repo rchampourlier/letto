@@ -11,9 +11,10 @@ describe "Letto::Data::WorkflowRepository" do
         to receive(:insert).
         with(
           uuid: "1",
+          user_uuid: "uuid",
           content: "content"
         )
-      Letto::Data::WorkflowRepository.create("content")
+      Letto::Data::WorkflowRepository.create("uuid", "content")
     end
   end
 

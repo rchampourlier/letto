@@ -1,4 +1,4 @@
-/.env.production
+/.env
 /*.DS_Store
 /.tags
 /coverage

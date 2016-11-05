@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 source "https://rubygems.org"
 
 ruby "2.3.1"
@@ -46,6 +47,7 @@ group :test do
   gem "rspec"
   gem "webmock"
   gem "simplecov", require: false
+  gem "codeclimate-test-reporter", "~> 1.0.0"
   gem "timecop"
   gem "sinatra-sessionography"
 end

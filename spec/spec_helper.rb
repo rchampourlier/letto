@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require "rspec"
 require "webmock/rspec"
 require "rack/test"
@@ -7,10 +8,6 @@ ENV["RACK_ENV"] = "test"
 
 # Running locally, setup simplecov
 require "simplecov"
-# require "simplecov-lcov"
-# SimpleCov.formatter = SimpleCov::Formatter::LcovFormatter
-# require "simplecov-json"
-# SimpleCov.formatter = SimpleCov::Formatter::JSONFormatter
 SimpleCov.start do
   add_filter do |src|
     # Ignoring files from the spec directory

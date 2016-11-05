@@ -14,6 +14,7 @@ GEM
     awesome_print (1.6.1)
     backports (3.6.7)
     builder (3.2.2)
+    codeclimate-test-reporter (1.0.0)
     coderay (1.1.0)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
@@ -192,6 +193,7 @@ PLATFORMS
 DEPENDENCIES
   activesupport
   awesome_print
+  codeclimate-test-reporter (~> 1.0.0)
   dotenv
   guard
   guard-rspec

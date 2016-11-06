@@ -21,21 +21,21 @@ module Letto
     end
 
     def organizations
-      client.find_many(
+      find_many(
         Trello::Organization,
         "/members/me/organizations"
       )
     end
 
     def boards
-      client.find_many(
+      find_many(
         Trello::Board,
         "/members/me/boards"
       )
     end
 
     def webhooks
-      client.find_many(
+      find_many(
         Trello::Webhook,
         "/tokens/#{token}/webhooks"
       )
@@ -43,13 +43,13 @@ module Letto
 
     def api_call(verb, target, payload)
       body = payload ? payload : {}
-      answ = client.send(:"#{verb.downcase}", target, body)
+      send(:"#{verb.downcase}", target, body)
     end
 
     # @return [String] Trello create webhook's id
     def create_board_webhook(board_id, callback_url, description)
       webhook_id = SecureRandom.uuid
-      trello_webhook = client.create(
+      create(
         :webhook,
         "description" => description,
         "idModel" => board_id,
@@ -59,25 +59,25 @@ module Letto
     end
 
     def delete_webhook(webhook_id)
-      client.delete("/webhooks/#{webhook_id}")
+      delete("/webhooks/#{webhook_id}")
     end
 
     def delete_token(token_id)
-      client.delete("/tokens/#{token_id}")
+      delete("/tokens/#{token_id}")
     end
 
     private
 
     def token
-      client.oauth_token
+      oauth_token
     end
 
     def member
-      @member ||= @client.find(:members, "me")
+      @member ||= find(:members, "me")
     end
 
     def method_missing(name, *args)
-      @client.send(name, *args)
+      client.send(name, *args)
     end
   end
 end

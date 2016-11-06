@@ -33,7 +33,9 @@ module Letto
     def add_webhooks_for_user(user, webhook_url_root)
       webhooks = fetch_webhooks_for_user(user)
       webhooks.each do |webhook|
-        add_webhook_to_cache(user, webhook, webhook_url_root)
+        callback_url = webhook.attributes[:callback_url]
+        webhook_id = callback_url.gsub("#{webhook_url_root}/", "")
+        add_webhook_to_cache(user, webhook_id)
       end
     rescue Trello::Error
       remove_access_token_for_user(user)
@@ -67,10 +69,8 @@ module Letto
       TrelloClient.new(access_token, access_token_secret)
     end
 
-    def add_webhook_to_cache(user, webhook, webhook_url_root)
-      callback_url = webhook.attributes[:callback_url]
-      callback_id = callback_url.gsub("#{webhook_url_root}/", "")
-      value[callback_id] = {
+    def add_webhook_to_cache(user, webhook_id)
+      value[webhook_id] = {
         uuid: user[:uuid],
         access_token: user[:trello_access_token],
         access_token_secret: user[:trello_access_token_secret]

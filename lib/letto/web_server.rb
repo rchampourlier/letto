@@ -38,11 +38,11 @@ module Letto
     # (in particular in terms of response time).
     # We use the TRELLO_USERS_WEBHOOKS_CACHE_CLASS constant to enable
     # dependency-injection in tests.
-    class << self
-      attr_reader :users_webhooks_cache
-    end
-    @users_webhooks_cache = TRELLO_USERS_WEBHOOKS_CACHE_CLASS.new
+    set :users_webhooks_cache, TRELLO_USERS_WEBHOOKS_CACHE_CLASS.new
     users_webhooks_cache.fetch(webhook_url_root: INCOMING_WEBHOOK_URL)
+    def users_webhooks_cache
+      settings.users_webhooks_cache
+    end
 
     before do
       @trello_auth = TrelloAuth.new(session, TRELLO_AUTH_CALLBACK_URL)
@@ -156,11 +156,9 @@ module Letto
           INCOMING_WEBHOOK_URL,
           description
         )
-        users_webhooks_cache.add_callback_to_cache(
-          trello_webhook_id,
-          user[:uuid],
-          user[:trello_access_token],
-          user[:trello_access_token_secret]
+        users_webhooks_cache.add_webhook_to_cache(
+          user,
+          trello_webhook_id
         )
         redirect "/trello/webhooks"
       end

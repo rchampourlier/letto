@@ -23,7 +23,6 @@ gem "sequel_pg"
 
 # Integrations
 gem "oauth"
-gem "slack-ruby-bot"
 gem "ruby-trello"
 gem "nokogiri"
 

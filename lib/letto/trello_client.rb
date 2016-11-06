@@ -7,10 +7,6 @@ module Letto
   class TrelloClient
     attr_reader :client
 
-    def self.for_user(user_row)
-      new(user_row[:access_token], user_row[:access_token_secret])
-    end
-
     def initialize(access_token, access_token_secret)
       @client = Trello::Client.new(
         consumer_key: ENV["TRELLO_CONSUMER_KEY"],

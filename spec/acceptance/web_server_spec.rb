@@ -4,16 +4,13 @@ require "rack/test"
 require "sinatra/sessionography"
 require "data/workflow_repository"
 
-# Monkey-patching UsersWebhookCache to prevent
-# tests from failing by trying to perform an
-# API call to Trello.
 require "users_webhooks_cache"
-module Letto
-  class UsersWebhooksCache
-    def self.fetch(_options)
-    end
+class SpecTrelloUsersWebhooksCache < Letto::UsersWebhooksCache
+  def fetch(*)
+    @value = {}
   end
 end
+Letto::TRELLO_USERS_WEBHOOKS_CACHE_CLASS = SpecTrelloUsersWebhooksCache
 
 require "letto/web_server"
 Letto::WebServer.helpers Sinatra::Sessionography

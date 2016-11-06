@@ -7,7 +7,7 @@ require "bundler"
 env = (ENV["RACK_ENV"] ||= "development")
 Bundler.setup(:default, env.to_sym)
 
-if env == "development" || env == "test"
+if env == "development"
   require "dotenv"
   require "pry"
   Dotenv.load
@@ -20,3 +20,8 @@ $LOAD_PATH.unshift File.join(root_dir, "lib")
 $LOAD_PATH.unshift File.join(root_dir, "lib", "letto")
 
 require "letto"
+
+# Dependency-injection for TrelloUsersWebhooksCache. See web_server.rb
+# for more information about this.
+require "users_webhooks_cache"
+Letto::TRELLO_USERS_WEBHOOKS_CACHE_CLASS = Letto::UsersWebhooksCache

@@ -8,7 +8,6 @@ require "data/workflow_repository"
 require "values/webhook"
 require "trello_client"
 require "runner"
-require "users_webhooks_cache"
 
 module Letto
   TRELLO_AUTH_CALLBACK_URL = "#{ENV['HOST']}/connection/callback"
@@ -26,9 +25,24 @@ module Letto
       secret: ENV["SESSION_SECRET"]
 
     set :show_exceptions, false if ENV["RACK_ENV"] == "test"
-    UsersWebhooksCache.fetch(webhook_url_root: INCOMING_WEBHOOK_URL)
 
     attr_reader :trello_auth, :user
+
+    # TECHNICAL-DEBT
+    # It's bad to have to load the webhooks for all users when starting
+    # the webserver, but until we can do it at the appropriate moment
+    # (e.g. when the users edits its webhooks or when receiving an
+    # incoming webhook), this is the easiest way to do it. We can't do
+    # lazily for now since it would mean performing the request during
+    # the incoming webhook processing, which would not be great either
+    # (in particular in terms of response time).
+    # We use the TRELLO_USERS_WEBHOOKS_CACHE_CLASS constant to enable
+    # dependency-injection in tests.
+    class << self
+      attr_reader :users_webhooks_cache
+    end
+    @users_webhooks_cache = TRELLO_USERS_WEBHOOKS_CACHE_CLASS.new
+    users_webhooks_cache.fetch(webhook_url_root: INCOMING_WEBHOOK_URL)
 
     before do
       @trello_auth = TrelloAuth.new(session, TRELLO_AUTH_CALLBACK_URL)
@@ -142,7 +156,7 @@ module Letto
           INCOMING_WEBHOOK_URL,
           description
         )
-        UsersWebhooksCache.add_callback_to_cache(
+        users_webhooks_cache.add_callback_to_cache(
           trello_webhook_id,
           user[:uuid],
           user[:trello_access_token],
@@ -182,8 +196,8 @@ module Letto
 
     def handle_incoming_webhook(webhook_id, request)
       webhook = Letto::Values::Webhook.with_request(webhook_id, request)
-      user_uuid = UsersWebhooksCache.user_uuid_from_callback(webhook_id)
-      Runner.new(config(user_uuid), UsersWebhooksCache).handle_webhook(webhook) unless user_uuid.nil?
+      user_uuid = users_webhooks_cache.user_uuid_from_callback(webhook_id)
+      Runner.new(config(user_uuid), users_webhooks_cache).handle_webhook(webhook) unless user_uuid.nil?
       { status: "ok" }.to_json
     end
 

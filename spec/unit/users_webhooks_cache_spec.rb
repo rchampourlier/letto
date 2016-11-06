@@ -15,7 +15,7 @@ describe Letto::UsersWebhooksCache do
 
   let(:trello_client_0) { double("trello_client_0", webhooks: trello_clients_webhooks_call_responses[0]) }
   let(:trello_client_1) { double("trello_client_1", webhooks: trello_clients_webhooks_call_responses[1]) }
-  let(:trello_clients) { [ trello_client_0, trello_client_1 ] }
+  let(:trello_clients) { [trello_client_0, trello_client_1] }
 
   let(:trello_clients_webhooks_call_responses) do
     [
@@ -49,6 +49,8 @@ describe Letto::UsersWebhooksCache do
     }
   end
 
+  subject { described_class.new }
+
   before do
     allow(Letto::Data::UserRepository).to receive(:all).and_return(users)
     allow(Letto::TrelloClient).to receive(:new).with(
@@ -59,11 +61,11 @@ describe Letto::UsersWebhooksCache do
     ).and_return(trello_clients[1])
   end
 
-  describe ".fetch(webhook_url_root)" do
+  describe "#fetch(webhook_url_root)" do
 
     it "builds an hash mapping callback ids to the corresponding user information" do
-      described_class.fetch(webhook_url_root: webhook_url_root)
-      expect(described_class.value).to eq(expected_value)
+      subject.fetch(webhook_url_root: webhook_url_root)
+      expect(subject.value).to eq(expected_value)
     end
 
     context "invalid OAuth tokens for a given user" do
@@ -79,39 +81,39 @@ describe Letto::UsersWebhooksCache do
           trello_access_token: nil,
           trello_access_token_secret: nil
         )
-        described_class.fetch(webhook_url_root: webhook_url_root)
+        subject.fetch(webhook_url_root: webhook_url_root)
       end
 
       it "still feeds the hash for other users" do
         allow(Letto::Data::UserRepository).to receive(:update_by_uuid)
-        described_class.fetch(webhook_url_root: webhook_url_root)
-        expect(described_class.value).to eq(expected_value.slice("callback002"))
+        subject.fetch(webhook_url_root: webhook_url_root)
+        expect(subject.value).to eq(expected_value.slice("callback002"))
       end
     end
   end
 
-  describe ".remove_callback_from_cache(callback_id)" do
-    before { described_class.fetch(webhook_url_root: webhook_url_root) }
+  describe "#remove_callback_from_cache(callback_id)" do
+    before { subject.fetch(webhook_url_root: webhook_url_root) }
 
     it "removes the callback from the cache" do
-      described_class.remove_callback_from_cache("callback001")
-      expect(described_class.value).to eq(expected_value.slice("callback002", "callback003"))
+      subject.remove_callback_from_cache("callback001")
+      expect(subject.value).to eq(expected_value.slice("callback002", "callback003"))
     end
   end
 
-  describe ".user_uuid_from_callback(callback_id)" do
-    before { described_class.fetch(webhook_url_root: webhook_url_root) }
+  describe "#user_uuid_from_callback(callback_id)" do
+    before { subject.fetch(webhook_url_root: webhook_url_root) }
 
     it "returns the user's uuid matching the specified callback id" do
-      expect(described_class.user_uuid_from_callback("callback001")).to eq("user001")
+      expect(subject.user_uuid_from_callback("callback001")).to eq("user001")
     end
   end
 
-  describe ".trello_client_from_callback(callback_id)" do
-    before { described_class.fetch(webhook_url_root: webhook_url_root) }
+  describe "#trello_client_from_callback(callback_id)" do
+    before { subject.fetch(webhook_url_root: webhook_url_root) }
 
     it "returns a Trello client for the user matching the specified callback" do
-      expect(described_class.trello_client_from_callback("callback001")).to eq(trello_clients[0])
+      expect(subject.trello_client_from_callback("callback001")).to eq(trello_clients[0])
     end
   end
 end

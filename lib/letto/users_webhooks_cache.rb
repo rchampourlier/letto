@@ -16,55 +16,76 @@ module Letto
   # tokens.
   class UsersWebhooksCache
 
+    # The cache is stored in the @value class instance variable.
+    # It's an hash with callback ids as keys.
+    class << self
+      attr_reader :value
+    end
+
     # Loads the webhooks for every user in the database, using
     # the Trello API.
-    def self.load(webhook_url_root: "")
-      users = Data::UserRepository.all
-      @user_webhooks_cache = {}
-      users.each do |user|
-        next if user[:trello_access_token].nil? || user[:trello_access_token_secret].nil?
-        trello_client = TrelloClient.new(user[:trello_access_token], user[:trello_access_token_secret])
-        begin
-          webhooks = trello_client.webhooks
-        rescue Trello::Error
-          Data::UserRepository.update_by_uuid(user[:uuid], trello_access_token: nil, trello_access_token_secret: nil)
-          next
-        end
-        webhooks = webhooks.map(&:attributes)
-        webhooks.each do |webhook|
-          callback_url = webhook[:callback_url]
-          callback_id = callback_url.gsub("#{webhook_url_root}/", "")
-          @user_webhooks_cache[callback_id] = {
-            uuid: user[:uuid],
-            access_token: user[:trello_access_token],
-            access_token_secret: user[:atrello_ccess_token_secret]
-          }
-        end
+    def self.fetch(webhook_url_root: "")
+      @value = {}
+      Data::UserRepository.all.each do |user|
+        next unless trello_tokens_for_user?(user)
+        add_webhooks_for_user(user, webhook_url_root)
       end
     end
 
-    def self.add_callback_to_cache(callback_id, user_uuid, access_token, access_token_secret)
-      @user_webhooks_cache[callback_id] = {
-        uuid: user_uuid,
-        access_token: access_token,
-        access_token_secret: access_token_secret
-      }
+    def self.add_webhooks_for_user(user, webhook_url_root)
+      webhooks = fetch_webhooks_for_user(user)
+      webhooks.each do |webhook|
+        add_webhook_to_cache(user, webhook, webhook_url_root)
+      end
+    rescue Trello::Error
+      remove_access_token_for_user(user)
+    end
+
+    def self.remove_access_token_for_user(user)
+      Data::UserRepository.update_by_uuid(
+        user[:uuid],
+        trello_access_token: nil,
+        trello_access_token_secret: nil
+      )
     end
 
     def self.remove_callback_from_cache(callback_id)
-      @user_webhooks_cache.delete(callback_id)
+      value.delete(callback_id)
     end
 
     def self.user_uuid_from_callback(callback_id)
-      return nil if @user_webhooks_cache[callback_id].nil?
-      @user_webhooks_cache[callback_id][:uuid]
+      return nil if value[callback_id].nil?
+      value[callback_id][:uuid]
     end
 
     def self.trello_client_from_callback(callback_id)
       return nil if callback_id.nil?
-      access_token = @user_webhooks_cache[callback_id][:access_token]
-      access_token_secret = @user_webhooks_cache[callback_id][:access_token_secret]
+      access_token = value[callback_id][:access_token]
+      access_token_secret = value[callback_id][:access_token_secret]
+      trello_client(access_token, access_token_secret)
+    end
+
+    def self.trello_client(access_token, access_token_secret)
       TrelloClient.new(access_token, access_token_secret)
+    end
+
+    def self.add_webhook_to_cache(user, webhook, webhook_url_root)
+      callback_url = webhook.attributes[:callback_url]
+      callback_id = callback_url.gsub("#{webhook_url_root}/", "")
+      value[callback_id] = {
+        uuid: user[:uuid],
+        access_token: user[:trello_access_token],
+        access_token_secret: user[:trello_access_token_secret]
+      }
+    end
+
+    def self.fetch_webhooks_for_user(user)
+      client = trello_client(user[:trello_access_token], user[:trello_access_token_secret])
+      client.webhooks
+    end
+
+    def self.trello_tokens_for_user?(user)
+      user[:trello_access_token].present? && user[:trello_access_token_secret].present?
     end
   end
 end

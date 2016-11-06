@@ -4,9 +4,20 @@ module Letto
   # Checker for workflows structures
   class WorkflowsChecker
     SUPPORTED_NODE_TYPES = %w(expression operation payload).freeze
-    SUPPORTED_FUNCTION_NAMES = %w(add api_call map min convert extract get_linkedin_photo).freeze
+    SUPPORTED_FUNCTION_NAMES = %w(add api_call map min convert extract get_linkedin_photo gsub).freeze
     SUPPORTED_CONVERSION_FUNCTIONS = %w(String Complex Float Integer Rational DateTime).freeze
+    SUPPORTED_COMPARISON_TYPES = %w(string_comparison regex_comparison).freeze
     SUPPORTED_VERBS = %w(GET POST PUT DELETE).freeze
+
+    FUNCTION_ADD_EXPECTED_ARGS = %w(* ...).freeze
+    FUNCTION_API_CALL_EXPECTED_ARGS = %w(expression expression [payload]).freeze
+    FUNCTION_MAP_EXPECTED_ARGS = %w(* *).freeze
+    FUNCTION_MIN_EXPECTED_ARGS = %w(* ...).freeze
+    FUNCTION_CONVERT_EXPECTED_ARGS = %w(expression *).freeze
+    FUNCTION_EXTRACT_EXPECTED_ARGS = %w(expression *).freeze
+    FUNCTION_GET_LINKEDIN_PHOTO_EXPECTED_ARGS = %w(*).freeze
+    FUNCTION_GSUB_EXPECTED_ARGS = %w(* expression expression expression).freeze
+    RE_OPTIONAL_ARGS = /\[(.*)\]/
 
     ERR_MSG_NO_WORKFLOWS = "No workflows to check"
     ERR_MSG_NO_NAME = "Workflow should have a name"
@@ -23,12 +34,14 @@ module Letto
     ERR_MSG_BLOCK_OPERATION_ARGUMENT_IS_NOT_ARRAY = "Operation blocks should have an array in arguments block %s"
 
     ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS = "Wrong number of arguments in %s block - should be %s %s"
+    ERR_MSG_BLOCK_OPERATION_WRONG_MIN_NB_ARGS = "Wrong number of arguments in %s block - should be %s %s"
     ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE = "Argument %i should be a %s in %s blocks %s"
 
     ERR_MSG_NODE_TYPE_NOT_SUPPORTED = "Unknown node type: %s"
     ERR_MSG_FUNCTION_NOT_SUPORTED = "Unknown function name: %s"
     ERR_MSG_CONVERSION_FUNCTION_NOT_SUPPORTED = "Unknown conversion function name: %s"
     ERR_MSG_VERB_NOT_SUPPORTED = "Unknown verb: %s"
+    ERR_MSG_COMPARISON_TYPE_NOT_SUPPORTED = "Unknow comparison type : %s"
 
     Error = Class.new(StandardError)
 
@@ -49,7 +62,9 @@ module Letto
       raise_workflow_error format(ERR_MSG_NO_CONDITIONS, name) if workflow["conditions"].nil?
       raise_workflow_error format(ERR_MSG_CONDITIONS_IS_NOT_ARRAY, name) unless workflow["conditions"].is_a?(Array)
       raise_workflow_error format(ERR_MSG_CONDITIONS_HAS_NONE_ON_MODEL_ID, name) if workflow["conditions"].none? { |a| a["path"] == "model.id" }
-      # shouls have an action
+      # comparison types should exist and be supported
+      workflow["conditions"].each { |a| verify_supported_comparison_type!(a["type"]) }
+      # should have an action
       raise_workflow_error format(ERR_MSG_NO_ACTION, name) if workflow["action"].nil?
       # each block in action shoud
       check_block!(workflow["action"])
@@ -85,31 +100,68 @@ module Letto
       # check all arguments
       arguments.each { |argument| check_block!(argument) }
       # check on arguments
-      if function == "api_call"
+      check_block_operation_arguments(block)
+      case function
+      when "api_call"
         check_block_operation_api_call!(block)
-      elsif function == "convert"
+      when "convert"
         check_block_operation_convert!(block)
+      when "gsub"
+        check_block_operation_gsub!(block)
       end
     end
 
     def self.check_block_operation_api_call!(block)
       arguments = block["arguments"]
-      # should have 3 arguments : verb, expression, payload
-      # or 2 arguments : verb, expression
-      raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, "api_call", "2 or 3", block) unless arguments.length == 3 || arguments.length == 2
-      raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 1, "expression", "api_call", block) if arguments[0]["type"] != "expression"
       verify_supported_verb!(arguments[0]["value"])
-      raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 2, "expression", "api_call", block) if arguments[1]["type"] != "expression"
-      raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 3, "payload", "api_call", block) if arguments.length == 3 && arguments[2]["type"] != "payload"
     end
 
     def self.check_block_operation_convert!(block)
       arguments = block["arguments"]
-      # should have 2 arguments : dest, value
-      raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, "convert", "2", block) unless arguments.length == 2
-      raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 1, "expression", "convert", block) if arguments[0]["type"] != "expression"
       verify_supported_conversion_function!(arguments[0]["value"])
-      raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 2, "expression", "convert", block) if arguments[1]["type"] != "expression"
+    end
+
+    def self.check_block_operation_gsub!(block)
+      arguments = block["arguments"]
+      verify_supported_comparison_type!(arguments[1]["value"])
+    end
+
+    def self.check_block_operation_arguments(block)
+      function = block["function"]
+      arguments = block["arguments"]
+      constraints = const_get("FUNCTION_#{function.upcase}_EXPECTED_ARGS")
+      check_block_operation_arguments_nb!(function, arguments, constraints, block)
+      check_block_operation_arguments_types!(function, arguments, constraints, block)
+    end
+
+    def self.check_block_operation_arguments_nb!(function, arguments, constraints, block)
+      if constraints.last == "..."
+        # test the minimum number of aruments
+        nb_args = constraints.length - 1
+        raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, function, "at least #{nb_args}", block) unless arguments.length >= nb_args
+      elsif RE_OPTIONAL_ARGS !~ constraints.last
+        # test the number of args
+        nb_args = constraints.length
+        raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, function, nb_args, block) unless arguments.length == nb_args
+      else
+        # test if there is optional args
+        min_args = constraints.count { |constraint| !constraint[RE_OPTIONAL_ARGS] }
+        max_args = constraints.length
+        raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, function, "between #{min_args} and #{max_args}", block) unless arguments.length >= min_args && arguments.length <= max_args
+      end
+    end
+
+    def self.check_block_operation_arguments_types!(function, arguments, constraints, block)
+      arguments.each_index do |i|
+        constraint = constraints[i]
+        argument_type = arguments[i]["type"]
+        break if constraint == "..."
+        next if constraint == "*"
+        unless RE_OPTIONAL_ARGS !~ constraint
+          constraint = constraint.match(RE_OPTIONAL_ARGS)[1]
+        end
+        raise_workflow_error format(ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, i + 1, constraint, function, block) if argument_type != constraint
+      end
     end
 
     def self.verify_supported_node_type!(node_type)
@@ -130,6 +182,11 @@ module Letto
     def self.verify_supported_verb!(verb)
       return true if SUPPORTED_VERBS.include?(verb.upcase)
       raise_workflow_error format(ERR_MSG_VERB_NOT_SUPPORTED, verb)
+    end
+
+    def self.verify_supported_comparison_type!(type)
+      return true if SUPPORTED_COMPARISON_TYPES.include?(type)
+      raise_workflow_error format(ERR_MSG_COMPARISON_TYPE_NOT_SUPPORTED, type)
     end
   end
 end

@@ -5,7 +5,7 @@ require "rack/test"
 require "workflows_checker"
 describe "Letto::WorkflowsChecker" do
   let(:test_wf) { {} }
-  context "check_workflows" do
+  context ".check_workflows" do
     it "raises an error if there is no workflow to check" do
       expect {
         Letto::WorkflowsChecker.check_workflows!(nil)
@@ -17,7 +17,7 @@ describe "Letto::WorkflowsChecker" do
     end
   end
 
-  context "check_workflow" do
+  context ".check_workflow" do
     it "raises an error if the workflow does not have any name" do
       expect {
         Letto::WorkflowsChecker.check_workflow!(test_wf)
@@ -69,10 +69,48 @@ describe "Letto::WorkflowsChecker" do
         )
     end
 
-    it "raises an error if the workflow does not have an action block" do
+    it "raises an error if the comparison type is not present" do
       test_wf = {
         "name" => "x",
         "conditions" => [{ "path" => "model.id" }]
+      }
+      expect {
+        Letto::WorkflowsChecker.check_workflow!(test_wf)
+      }.
+        to raise_error(
+          Letto::WorkflowsChecker::Error,
+          format(Letto::WorkflowsChecker::ERR_MSG_COMPARISON_TYPE_NOT_SUPPORTED, "")
+        )
+    end
+
+    it "raises an error if the comparison type is not supported" do
+      test_wf = {
+        "name" => "x",
+        "conditions" => [
+          {
+            "type" => "a",
+            "path" => "model.id"
+          }
+        ]
+      }
+      expect {
+        Letto::WorkflowsChecker.check_workflow!(test_wf)
+      }.
+        to raise_error(
+          Letto::WorkflowsChecker::Error,
+          format(Letto::WorkflowsChecker::ERR_MSG_COMPARISON_TYPE_NOT_SUPPORTED, test_wf["conditions"][0]["type"])
+        )
+    end
+
+    it "raises an error if the workflow does not have an action block" do
+      test_wf = {
+        "name" => "x",
+        "conditions" => [
+          {
+            "type" => "string_comparison",
+            "path" => "model.id"
+          }
+        ]
       }
       expect {
         Letto::WorkflowsChecker.check_workflow!(test_wf)
@@ -84,7 +122,7 @@ describe "Letto::WorkflowsChecker" do
     end
   end
 
-  context "check_block" do
+  context ".check_block" do
     it "raises an error if block has no type" do
       expect {
         Letto::WorkflowsChecker.check_block!(test_wf)
@@ -122,7 +160,7 @@ describe "Letto::WorkflowsChecker" do
     end
   end
 
-  context "check_block_operation" do
+  context ".check_block_operation" do
     it "raises an error if there is no function name" do
       expect {
         Letto::WorkflowsChecker.check_block_operation!(test_wf)
@@ -174,284 +212,465 @@ describe "Letto::WorkflowsChecker" do
     end
   end
 
-  context "check_block_operation_api_call" do
-    context "check number of orguments" do
-      it "raises an error if there is less than 2 argument" do
-        test_wf = {
-          "arguments" => ["x"]
-        }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, "api_call", "2 or 3", test_wf)
-          )
-      end
-
-      it "raises an error if there is more than 3 arguments" do
-        test_wf = {
-          "arguments" => %w(w x y z)
-        }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, "api_call", "2 or 3", test_wf)
-          )
-      end
-
-      it "does not raise an error on the number of arguments if there is 2 arguments" do
-        test_wf = {
-          "arguments" => %w(x y)
-        }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 1, "expression", "api_call", test_wf)
-          )
-      end
-
-      it "does not raise an error on the number of arguments if there is 3 arguments" do
-        test_wf = {
-          "arguments" => %w(x y z)
-        }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 1, "expression", "api_call", test_wf)
-          )
-      end
-    end
-
-    context "check arguments types" do
+  context ".check_block_operation_api_call" do
+    it "raises an error if the 1st argument value is not a supported verb" do
       test_wf = {
         "arguments" => [
-          { "type" => "x" },
+          {
+            "type" => "expression",
+            "value" => "x"
+          },
           "y",
           "z"
         ]
       }
-      it "raises an error if the 1st argument is not of type expression" do
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
+      }.
+        to raise_error(
+          Letto::WorkflowsChecker::Error,
+          format(Letto::WorkflowsChecker::ERR_MSG_VERB_NOT_SUPPORTED, test_wf["arguments"][0]["value"])
+        )
+    end
+
+    it "raises no error if the arguments are of good type" do
+      test_wf = {
+        "arguments" => [
+          {
+            "type" => "expression",
+            "value" => "GET"
+          },
+          {
+            "type" => "expression"
+          },
+          {
+            "type" => "payload"
+          }
+        ]
+      }
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
+      }.
+        not_to raise_error
+    end
+  end
+
+  context ".check_block_operation_convert" do
+    it "raises an error if the 1st argument value is not a supported conversion function" do
+      test_wf = {
+        "arguments" => [
+          {
+            "type" => "expression",
+            "value" => "x"
+          },
+          "y"
+        ]
+      }
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_convert!(test_wf)
+      }.
+        to raise_error(
+          Letto::WorkflowsChecker::Error,
+          format(Letto::WorkflowsChecker::ERR_MSG_CONVERSION_FUNCTION_NOT_SUPPORTED, test_wf["arguments"][0]["value"])
+        )
+    end
+
+    it "raises no error if the arguments are of good type" do
+      test_wf = {
+        "arguments" => [
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression"
+          }
+        ]
+      }
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_convert!(test_wf)
+      }.
+        not_to raise_error
+    end
+  end
+
+  context ".check_block_operation_gsub" do
+    it "raises an error if the 2nd argument value is not a supported comparison type" do
+      test_wf = {
+        "arguments" => [
+          {
+            "type" => "expression",
+            "value" => "x"
+          },
+          {
+            "type" => "expression",
+            "value" => "x"
+          },
+          {
+            "type" => "expression",
+            "value" => "x"
+          },
+          {
+            "type" => "expression",
+            "value" => "x"
+          }
+        ]
+      }
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_gsub!(test_wf)
+      }.
+        to raise_error(
+          Letto::WorkflowsChecker::Error,
+          format(Letto::WorkflowsChecker::ERR_MSG_COMPARISON_TYPE_NOT_SUPPORTED, test_wf["arguments"][1]["value"])
+        )
+    end
+
+    it "raises no error if the arguments are of good type" do
+      test_wf = {
+        "arguments" => [
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "string_comparison"
+          },
+          {
+            "type" => "expression",
+            "value" => "x"
+          },
+          {
+            "type" => "expression",
+            "value" => "x"
+          }
+        ]
+      }
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_gsub!(test_wf)
+      }.
+        not_to raise_error
+    end
+  end
+
+  context ".check_block_operation_arguments" do
+    it "return with a name error if the function args are undefined" do
+      block = {
+        "function" => "na",
+        "arguments" => []
+      }
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_arguments(block)
+      }.
+      to raise_error(
+        NameError
+      )
+    end
+  end
+
+  context ".check_block_operation_arguments_nb" do
+    context "static number of args" do
+      let(:function) { "TEST" }
+      let(:constraints) { %w(* *).freeze }
+      let(:block) { "" }
+
+      it "raises an error if there is less args" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
         expect {
-          Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
         }.
           to raise_error(
             Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 1, "expression", "api_call", test_wf)
+            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, function, 2, block)
           )
       end
 
-      it "raises an error if the 1st argument value is not a supported verb" do
-        test_wf = {
-          "arguments" => [
-            {
-              "type" => "expression",
-              "value" => "x"
-            },
-            "y",
-            "z"
-          ]
-        }
+      it "raises no error if there is the good number of args" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
         expect {
-          Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
+        }.
+          not_to raise_error
+      end
+
+      it "raises an error if there is more args" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
+        expect {
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
         }.
           to raise_error(
             Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_VERB_NOT_SUPPORTED, test_wf["arguments"][0]["value"])
+            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, function, 2, block)
           )
       end
+    end
 
-      it "raises an error if the 2nd argument is not of type expression" do
-        test_wf = {
-          "arguments" => [
-            {
-              "type" => "expression",
-              "value" => "GET"
-            },
-            {
-              "type" => "y"
-            },
-            "z"
-          ]
-        }
+    context "static number of args with optional arg" do
+      let(:function) { "TEST" }
+      let(:constraints) { %w(* * [*]).freeze }
+      let(:block) { "" }
+
+      it "raises an error if there is less args" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
         expect {
-          Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
         }.
           to raise_error(
             Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 2, "expression", "api_call", test_wf)
+            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, function, "between 2 and 3", block)
           )
       end
 
-      it "raises an error if the 3rd argument is not of type payload" do
-        test_wf = {
-          "arguments" => [
-            {
-              "type" => "expression",
-              "value" => "GET"
-            },
-            {
-              "type" => "expression"
-            },
-            {
-              "type" => "z"
-            }
-          ]
-        }
+      it "raises no error if there is the good number of args - no optional arg" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
         expect {
-          Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
+        }.
+          not_to raise_error
+      end
+
+      it "raises no error if there is the good number of args - with optional arg" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
+        expect {
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
+        }.
+          not_to raise_error
+      end
+
+      it "raises an error if there is more args" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
+        expect {
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
         }.
           to raise_error(
             Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 3, "payload", "api_call", test_wf)
+            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, function, "between 2 and 3", block)
+          )
+      end
+    end
+
+    context "variable number of args" do
+      let(:function) { "TEST" }
+      let(:constraints) { %w(* * ...).freeze }
+      let(:block) { "" }
+
+      it "raises an error if there is not enough args" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
+        expect {
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
+        }.
+          to raise_error(
+            Letto::WorkflowsChecker::Error,
+            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, function, "at least 2", block)
           )
       end
 
-      it "raises no error if the arguments are of good type" do
-        test_wf = {
-          "arguments" => [
-            {
-              "type" => "expression",
-              "value" => "GET"
-            },
-            {
-              "type" => "expression"
-            },
-            {
-              "type" => "payload"
-            }
-          ]
-        }
+      it "raises no error if there is the minimum number of args" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
         expect {
-          Letto::WorkflowsChecker.check_block_operation_api_call!(test_wf)
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
+        }.
+          not_to raise_error
+      end
+
+      it "raises no error if there is more than the minimal" do
+        arguments = [
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          },
+          {
+            "type" => "expression",
+            "value" => "String"
+          }
+        ]
+        expect {
+          Letto::WorkflowsChecker.check_block_operation_arguments_nb!(function, arguments, constraints, block)
         }.
           not_to raise_error
       end
     end
   end
 
-  context "check_block_operation_convert" do
-    context "check number of orguments" do
-      it "raises an error if there is less than 2 argument" do
-        test_wf = {
-          "arguments" => ["x"]
-        }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_convert!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, "convert", "2", test_wf)
-          )
-      end
+  context ".check_block_operation_arguments_types" do
+    let(:function) { "TEST" }
+    let(:constraints) { %w(expression [payload] ...).freeze }
+    let(:block) { "" }
 
-      it "raises an error if there is more than 2 arguments" do
-        test_wf = {
-          "arguments" => %w(x y z)
+    it "raises an error if the first argument is not an expression" do
+      arguments = [
+        {
+          "type" => "payload",
+          "value" => "String"
         }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_convert!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_WRONG_NB_ARGS, "convert", "2", test_wf)
-          )
-      end
-
-      it "does not raise an error on the number of arguments if there is 2 arguments" do
-        test_wf = {
-          "arguments" => %w(x y)
-        }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_convert!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 1, "expression", "convert", test_wf)
-          )
-      end
+      ]
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_arguments_types!(function, arguments, constraints, block)
+      }.
+        to raise_error(
+          Letto::WorkflowsChecker::Error,
+          format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 1, "expression", function, block)
+        )
     end
 
-    context "check arguments types" do
-      it "raises an error if the 1st argument is not of type expression" do
-        test_wf = {
-          "arguments" => [
-            { "type" => "x" },
-            "y"
-          ]
+    it "raises no error if the first argument is an expression - no other args" do
+      arguments = [
+        {
+          "type" => "expression",
+          "value" => "String"
         }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_convert!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 1, "expression", "convert", test_wf)
-          )
-      end
+      ]
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_arguments_types!(function, arguments, constraints, block)
+      }.
+        not_to raise_error
+    end
 
-      it "raises an error if the 1st argument value is not a supported conversion function" do
-        test_wf = {
-          "arguments" => [
-            {
-              "type" => "expression",
-              "value" => "x"
-            },
-            "y"
-          ]
+    it "raises an error if the second argument is not a payload" do
+      arguments = [
+        {
+          "type" => "expression",
+          "value" => "String"
+        },
+        {
+          "type" => "expression",
+          "value" => "String"
         }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_convert!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_CONVERSION_FUNCTION_NOT_SUPPORTED, test_wf["arguments"][0]["value"])
-          )
-      end
+      ]
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_arguments_types!(function, arguments, constraints, block)
+      }.
+        to raise_error(
+          Letto::WorkflowsChecker::Error,
+          format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 2, "payload", function, block)
+        )
+    end
 
-      it "raises an error if the 2nd argument is not of type expression" do
-        test_wf = {
-          "arguments" => [
-            {
-              "type" => "expression",
-              "value" => "String"
-            },
-            {
-              "type" => "y"
-            }
-          ]
+    it "raises no error if the second argument is a payload" do
+      arguments = [
+        {
+          "type" => "expression",
+          "value" => "String"
+        },
+        {
+          "type" => "payload",
+          "value" => "String"
         }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_convert!(test_wf)
-        }.
-          to raise_error(
-            Letto::WorkflowsChecker::Error,
-            format(Letto::WorkflowsChecker::ERR_MSG_BLOCK_OPERATION_ARG_WRONG_TYPE, 2, "expression", "convert", test_wf)
-          )
-      end
+      ]
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_arguments_types!(function, arguments, constraints, block)
+      }.
+        not_to raise_error
+    end
 
-      it "raises no error if the arguments are of good type" do
-        test_wf = {
-          "arguments" => [
-            {
-              "type" => "expression",
-              "value" => "String"
-            },
-            {
-              "type" => "expression"
-            }
-          ]
+    it "raises no error whatever the type of the third arg" do
+      arguments = [
+        {
+          "type" => "expression",
+          "value" => "String"
+        },
+        {
+          "type" => "payload",
+          "value" => "String"
+        },
+        {
+          "type" => "x",
+          "value" => "String"
         }
-        expect {
-          Letto::WorkflowsChecker.check_block_operation_convert!(test_wf)
-        }.
-          not_to raise_error
-      end
+      ]
+      expect {
+        Letto::WorkflowsChecker.check_block_operation_arguments_types!(function, arguments, constraints, block)
+      }.
+        not_to raise_error
     end
   end
 end

@@ -164,6 +164,21 @@ module Letto
       source.css(linkedin_selector)[0]["data-delayed-url"]
     end
 
+    def apply_function_gsub(arguments, _data, _webhook_id = nil)
+      initial_string = arguments[0]
+      pattern_type = arguments[1]
+      if pattern_type == "string_comparison"
+        pattern = arguments[2]
+      elsif pattern_type == "regex_comparison"
+        pattern = Regexp.new(arguments[2])
+      else
+        raise "Unknown pattern type: #{pattern_type}"
+      end
+      replacement = arguments[3]
+      puts "searching #{initial_string} to find #{pattern} and replace by #{replacement}"
+      initial_string.gsub(pattern, replacement)
+    end
+
     def workflows
       config["workflows"]
     end

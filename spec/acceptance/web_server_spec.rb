@@ -10,7 +10,7 @@ require "data/workflow_repository"
 require "users_webhooks_cache"
 module Letto
   class UsersWebhooksCache
-    def self.load(_options)
+    def self.fetch(_options)
     end
   end
 end

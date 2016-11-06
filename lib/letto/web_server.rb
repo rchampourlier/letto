@@ -26,7 +26,7 @@ module Letto
       secret: ENV["SESSION_SECRET"]
 
     set :show_exceptions, false if ENV["RACK_ENV"] == "test"
-    UsersWebhooksCache.load(webhook_url_root: INCOMING_WEBHOOK_URL)
+    UsersWebhooksCache.fetch(webhook_url_root: INCOMING_WEBHOOK_URL)
 
     attr_reader :trello_auth, :user
 

@@ -10,8 +10,8 @@ ENV["RACK_ENV"] = "test"
 require "simplecov"
 SimpleCov.start do
   add_filter do |src|
-    # Ignoring files from the spec directory
     src.filename =~ %r{/spec/}
+    src.filename =~ %r{/config/boot.rb}
   end
 end
 

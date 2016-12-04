@@ -6,7 +6,7 @@ Sequel.migration do
     create_table :workflows do
       String :uuid, primary_key: true
       String :user_uuid, null: false
-      String :content, null: false
+      String :data, null: false
       DateTime :created_at, null: false
       DateTime :updated_at, null: false
     end

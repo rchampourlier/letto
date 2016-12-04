@@ -21,13 +21,16 @@ gem "pg"
 gem "sequel"
 gem "sequel_pg"
 
-# Integrations
+# Integrationss
 gem "oauth"
 gem "ruby-trello"
 gem "nokogiri"
 
 # Ruby sugar
 gem "activesupport"
+
+# Patterns
+gem "event_train", "~> 0.2.1"
 
 group :development do
   gem "guard"
@@ -49,4 +52,5 @@ group :test do
   gem "codeclimate-test-reporter", "~> 1.0.0"
   gem "timecop"
   gem "sinatra-sessionography"
+  gem "capybara"
 end

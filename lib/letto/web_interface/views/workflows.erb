@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Letto | Admin workflows</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  </head>
+  <body>
+    <i><a href="/">Back to Home Page</a></i>
+    <h1>Workflows</h1>
+    <div id="flash">
+      <% flash.each do |type, message| %>
+      <div class="alert alert-<%= type %>">
+        <%= message %>
+      </div>
+      <% end %>
+    </div>
+    <table style="width:100%">
+      <tr>
+        <td width="30%" valign="top">
+          <% unless @workflows.empty? %>
+          <table style="width:100%" class="workflows_list">
+            <% @workflows.each do | workflow | %>
+            <% uuid = workflow[:uuid] %>
+            <% parsed_data = JSON.parse(workflow[:data]) %>
+            <tr class="workflows_list--row">
+              <td><%= parsed_data['name'] %></td>
+              <td>
+                <form action="/workflows/<%= uuid %>" method="get">
+                  <input type="submit" value="Display" <% if @selected_workflow_uuid == uuid %>disabled<%end%> />
+                </form>
+              </td>
+              <td>
+                <form action="/workflows/<%= uuid %>" method="post">
+                  <input type="hidden" name="_method" value="delete" />
+                  <input type="submit" value="Delete" />
+                </form>
+              </td>
+            </tr>
+            <% end %>
+          </table>
+          <% else %>
+          <i>No workflows, click "Add workflow" to add one</i><br />
+          <% end %>
+          <br />
+          <form action="/workflows" method="get">
+            <input type="submit" value="Add workflow" />
+          </form>
+        </td>
+        <td width="70%">
+          <% if @selected_workflow_uuid %>
+            <form action="/workflows/<%= @selected_workflow_uuid %>" method="post">
+              <input type="hidden" name="_method" value="put" />
+              <textarea name="workflow_data" style="width:100%" rows="30"><%= @selected_workflow_data %></textarea>
+              <br />
+              <input type="submit" value="Save workflow">
+            </form>
+          <% else %>
+          <form action="/workflows" method="post">
+            <textarea name="workflow_data" style="width:100%" rows="20"><%= @selected_workflow_data %></textarea>
+            <br />
+            <input type="submit" value="Save as new workflow" />
+          </form>
+          <% end %>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

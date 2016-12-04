@@ -2,7 +2,7 @@
 require "rspec"
 require "webmock/rspec"
 require "rack/test"
-require "pry"
+require "capybara/rspec"
 
 ENV["RACK_ENV"] = "test"
 
@@ -15,21 +15,44 @@ SimpleCov.start do
   end
 end
 
-# Setup app-specific environment variables
-test_environment = {
-  "DATABASE_URL" => "postgres://letto_user:password@localhost:5432/letto_test"
-}
-test_environment.each { |k, v| ENV[k] = v }
-
 require File.expand_path("../../config/boot", __FILE__)
 
 Dir[File.expand_path("../support/**/*.rb", __FILE__)].each { |f| require(f) }
 
 RSpec.configure do |config|
-  config.after(:each) do
-    # UsersWebhookCache class is used as a shared singleton so
-    # operations relying on it may have an effect on others if
-    # we do not reset its instance variable's value.
-    Letto::UsersWebhooksCache.instance_variable_set(:@value, {})
+  config.order = :random
+  config.include Rack::Test::Methods
+  config.include Capybara::DSL
+  config.include SpecHelpers::Features
+  config.include SpecHelpers::Fixtures
+end
+
+Capybara.register_driver :rack_test do |app|
+  Capybara::RackTest::Driver.new(app, headers: { "HTTP_USER_AGENT" => "Capybara" })
+end
+
+require "letto/web_interface"
+require "sinatra/sessionography"
+Capybara.app = Letto::WebInterface
+Letto::WebInterface.helpers Sinatra::Sessionography
+
+# If the database is necessary during the tests, you may uncomment
+# the following lines.
+require "sequel"
+Sequel.extension :migration, :core_extensions
+
+require "persistence/user_repository"
+require "persistence/workflow_repository"
+
+MIGRATIONS_DIR = File.expand_path("../../config/db_migrations", __FILE__)
+client = Letto::Persistence.db
+RSpec.configure do |config|
+
+  config.before(:all) do
+    Sequel::Migrator.apply(client, MIGRATIONS_DIR)
+  end
+
+  config.after(:all) do
+    Sequel::Migrator.apply(client, MIGRATIONS_DIR, 0)
   end
 end

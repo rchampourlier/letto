@@ -1,49 +1,56 @@
 # frozen_string_literal: true
 require "spec_helper"
 require "rack/test"
+require "persistence/user_repository"
 
-require "data/user_repository"
-describe "Letto::Data::UserRepository" do
+describe "Letto::Persistence::UserRepository" do
+
   describe "create" do
     it "calls insert with specified arguments" do
-      allow(Letto::Data::Repository).to receive(:generate_uuid).and_return("1")
-      expect(Letto::Data::Repository).
+      allow(Letto::Persistence::Repository).to receive(:generate_uuid).and_return("1")
+      expect(Letto::Persistence::Repository).
         to receive(:insert).
         with(
           uuid: "1",
           username: "me",
-          trello_access_token: "access_token",
-          trello_access_token_secret: "access_token_secret",
+          trello_access_token: "trello_access_token",
+          trello_access_token_secret: "trello_access_token_secret",
           session_id: "session_id"
         )
-      Letto::Data::UserRepository.create("me", "access_token", "access_token_secret", "session_id")
+      Letto::Persistence::UserRepository.create(
+        username: "me",
+        trello_access_token: "trello_access_token",
+        trello_access_token_secret: "trello_access_token_secret",
+        session_id: "session_id"
+      )
     end
   end
 
   describe "for_session_id" do
     it "calls first_where with session_id" do
-      expect(Letto::Data::Repository).
+      expect(Letto::Persistence::Repository).
         to receive(:first_where).
         with(session_id: "session_id")
-      Letto::Data::UserRepository.for_session_id("session_id")
+      Letto::Persistence::UserRepository.for_session_id("session_id")
     end
   end
 
-  describe "update_by_uuid" do
-    it "calls update_where with uuid" do
-      expect(Letto::Data::Repository).
+  describe "update_by_uuid(uuid:, access_token: nil, access_token_secret: nil)" do
+
+    it "updates the specified attributes" do
+      expect(Letto::Persistence::Repository).
         to receive(:update_where).
-        with({ uuid: "1" }, uuid: "2")
-      Letto::Data::UserRepository.update_by_uuid("1", uuid: "2")
+        with({ uuid: "1" }, trello_access_token: "new")
+      Letto::Persistence::UserRepository.update_by_uuid(uuid: "1", trello_access_token: "new")
     end
   end
 
-  describe "delete_by_uuid" do
+  describe "delete_by_uuid(uuid:)" do
     it "calls delete with uuid" do
-      expect(Letto::Data::Repository).
+      expect(Letto::Persistence::Repository).
         to receive(:delete).
         with(uuid: "1")
-      Letto::Data::UserRepository.delete_by_uuid("1")
+      Letto::Persistence::UserRepository.delete_by_uuid(uuid: "1")
     end
   end
 end

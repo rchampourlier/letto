@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+export $(cat .env.development | xargs) && psql $DATABASE_URL

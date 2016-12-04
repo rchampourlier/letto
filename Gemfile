@@ -1,52 +1,50 @@
 # frozen_string_literal: true
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-ruby "2.3.1"
+ruby '2.3.3'
 
-gem "httparty"
-gem "sinatra"
-gem "sinatra-contrib"
-gem "puma"
+gem 'bundler'
+gem 'hanami',       '~> 0.9'
+gem 'hanami-model', '~> 0.7'
+gem 'rake'
 
-# Sinatra extensions
-gem "sinatra-flash"
-
-# For the console
-gem "pry"
-gem "awesome_print"
-gem "ruby-progressbar"
+gem 'httparty'
 
 # Storage
-gem "pg"
-gem "sequel"
-gem "sequel_pg"
+gem 'pg'
 
 # Integrations
-gem "oauth"
-gem "ruby-trello"
-gem "nokogiri"
+gem 'nokogiri'
+gem 'oauth'
+gem 'ruby-trello'
 
-# Ruby sugar
-gem "activesupport"
+# Patterns
+gem 'dry-struct'
+gem 'dry-system'
+gem 'event_train', '~> 0.2.1'
 
 group :development do
-  gem "guard"
-  gem "guard-rspec", require: false
-  gem "guard-shotgun"
-  gem "terminal-notifier-guard"
+  # Code reloading
+  # See: http://hanamirb.org/guides/projects/code-reloading
+  # gem 'shotgun'
+  gem 'guard'
+  gem 'guard-minitest'
+  gem 'guard-shotgun'
+  gem 'terminal-notifier-guard'
 end
 
-group :development, :test do
-  gem "rake"
-  gem "dotenv"
+group :test, :development do
+  gem 'awesome_print'
+  gem 'dotenv', '~> 2.0'
+  gem 'pry'
 end
 
 group :test do
-  gem "rack-test"
-  gem "rspec"
-  gem "webmock"
-  gem "simplecov", require: false
-  gem "codeclimate-test-reporter", "~> 1.0.0"
-  gem "timecop"
-  gem "sinatra-sessionography"
+  gem 'capybara'
+  gem 'minitest'
+  gem 'minitest-reporters'
+end
+
+group :production do
+  gem 'puma'
 end

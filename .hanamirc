@@ -1,0 +1,4 @@
+project=letto
+architecture=container
+test=minitest
+template=erb

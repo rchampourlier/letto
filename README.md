@@ -17,7 +17,7 @@ In development, to perform OAuth handshake with Trello, you will need
 to publish your local server. You may use ngrok for this.
 
 ```
-ngrok http 9292
+ngrok http 2300
 ```
 
 ### Walkthrough

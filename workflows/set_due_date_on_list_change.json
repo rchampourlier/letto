@@ -1,0 +1,80 @@
+{
+  "name": "setDueDateOnListChange",
+  "conditions": [
+    {
+      "type": "string_comparison",
+      "target": "payload",
+      "path": "model.id",
+      "value": "55a8aa87f4a7a25a821cce9e"
+    },
+    {
+      "type": "string_comparison",
+      "target": "payload",
+      "path": "action.type",
+      "value": "updateCard"
+    },
+    {
+      "type": "string_comparison",
+      "target": "payload",
+      "path": "action.data.listAfter.name",
+      "value": ["Day", "Week", "Month"]
+    }
+  ],
+  "action": {
+    "type": "operation",
+    "function": "api_call",
+    "arguments": [
+      {
+        "type": "value",
+        "value": "PUT"
+      },
+      {
+        "type": "target",
+        "value": "/cards/{{ action.data.card.id }}"
+      },
+      {
+        "type" : "payload",
+        "value": {
+          "due": {
+            "type": "operation",
+            "function": "add",
+            "arguments": [
+              {
+                "type": "operation",
+                "function": "convert",
+                "arguments": [
+                  {
+                    "type": "value",
+                    "value": "DateTime"
+                  },
+                  {
+                    "type": "expression",
+                    "value": "action.date"
+                  }
+                ]
+              },
+              {
+                "type": "operation",
+                "function": "extract",
+                "arguments" : [
+                  {
+                    "type": "expression",
+                    "value": "action.data.listAfter.name"
+                  },
+                  {
+                    "type": "value",
+                    "value": {
+                      "Day": 1,
+                      "Week": 7,
+                      "Month" : 30
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

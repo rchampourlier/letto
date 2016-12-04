@@ -4,6 +4,9 @@ Style/DotPosition:
 Metrics/LineLength:
   Max: 120
 
+Metrics/BlockLength:
+  ExcludedMethods: ['describe', 'context']
+
 Style/AlignParameters:
   EnforcedStyle: with_fixed_indentation
 
@@ -22,6 +25,5 @@ Style/EmptyLinesAroundClassBody:
 Style/EmptyLinesAroundModuleBody:
   Enabled: false
 
-Style/StringLiterals:
-  EnforcedStyle: double_quotes
-  Enabled: true
+Style/ClassAndModuleChildren:
+  Enabled: false

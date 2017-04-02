@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require_relative '../../../../../../lib/letto/repositories/integration_repository'
+
 module Web::Controllers
   module Integrations
     module Trello
@@ -7,17 +9,20 @@ module Web::Controllers
         # Initialize Trello integration OAuth connection
         class Destroy
           include Web::Action
-          include SharedMethods
+
+          def initialize(event: TrelloConnectionRemovedByUser.new)
+            @event = event
+          end
 
           def call(_params)
-            Trello.client(user: user).delete_token(user[:trello_access_token])
-            Persistence::UserRepository.update_by_uuid(
-              uuid: user[:uuid],
-              trello_access_token: nil,
-              trello_access_token_secret: nil,
-              force_nil: true
-            )
-            redirect '/'
+            @event.call(user_uuid: user_uuid)
+            redirect_to routes.root_path
+          end
+
+          private
+
+          def user_uuid
+            session[:user_uuid]
           end
         end
       end

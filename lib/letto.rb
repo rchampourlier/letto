@@ -29,13 +29,6 @@ module Letto
     Container[path]
   end
 
-  # To inject a registered dependency:
-  #
-  #   include Letto.injection('some.path')
-  def self.injection(path)
-    Container.injector[path]
-  end
-
   Event = Class.new(Service)
   Event.log_with(LOGGER)
   Event.logging_enabled = false if ENV['HANAMI_ENV'] == 'test'

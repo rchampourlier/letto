@@ -18,7 +18,7 @@ class OAuthConsumerMock
     end
 
     def authorize_url(_params)
-      "authorize_url?params=params"
+      'authorize_url?params=params'
     end
   end
 
@@ -31,7 +31,13 @@ end
 
 # Mock for OAuth::RequestToken
 class OAuthRequestTokenMock
+  include Helpers
+  def initialize(consumer, request_token, request_token_secret); end
 
+  def get_access_token(*)
+    double(token: 'token', secret: 'secret')
+  end
 end
+
 Letto.register('oauth_consumer_class', OAuthConsumerMock)
 Letto.register('oauth_request_token_class', OAuthRequestTokenMock)

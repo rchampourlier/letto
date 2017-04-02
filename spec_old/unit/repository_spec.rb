@@ -51,31 +51,31 @@ describe Letto::Persistence::Repository do
 
   describe ".delete_where" do
     it "deletes a row into the db" do
-      allow(Letto::Persistence::Repository).to receive(:where).with(uuid: "1").and_return(table)
+      allow(Letto::Persistence::Repository).to receive(:where).with(id: "1").and_return(table)
       expect(table).
         to receive(:delete).
         with(no_args)
-      Letto::Persistence::Repository.delete_where(uuid: "1")
+      Letto::Persistence::Repository.delete_where(id: "1")
     end
   end
 
   describe ".update_where" do
     it "updates a row into the db" do
-      allow(Letto::Persistence::Repository).to receive(:where).with(uuid: "2").and_return(table)
+      allow(Letto::Persistence::Repository).to receive(:where).with(id: "2").and_return(table)
       expect(table).
         to receive(:update).
-        with(uuid: "1")
-      Letto::Persistence::Repository.update_where({ uuid: "2" }, uuid: "1")
+        with(id: "1")
+      Letto::Persistence::Repository.update_where({ id: "2" }, id: "1")
     end
   end
 
   describe ".first_where" do
     it "return the first matching row into the db" do
-      allow(Letto::Persistence::Repository).to receive(:where).with(uuid: "1").and_return(table)
+      allow(Letto::Persistence::Repository).to receive(:where).with(id: "1").and_return(table)
       expect(table).
         to receive(:first).
         with(no_args)
-      Letto::Persistence::Repository.first_where(uuid: "1")
+      Letto::Persistence::Repository.first_where(id: "1")
     end
   end
 
@@ -84,8 +84,8 @@ describe Letto::Persistence::Repository do
       allow(Letto::Persistence::Repository).to receive(:table).and_return(table)
       expect(table).
         to receive(:where).
-        with(uuid: "1")
-      Letto::Persistence::Repository.where(uuid: "1")
+        with(id: "1")
+      Letto::Persistence::Repository.where(id: "1")
     end
   end
 

@@ -7,14 +7,21 @@ module Web::Controllers
         # Callback for Trello integration OAuth connection
         class Callback
           include Web::Action
-          include SharedMethods
-          include Letto.injection('oauth_consumer_class')
-          include Letto.injection('oauth_request_token_class')
+
+          def initialize(
+            event_successful: TrelloConnectionWasSuccessful,
+            oauth_consumer: Connection.oauth_consumer,
+            oauth_request_token_class: Letto.dep('oauth_request_token_class')
+          )
+            @event_successful = event_successful
+            @oauth_consumer = oauth_consumer
+            @oauth_request_token_class = oauth_request_token_class
+          end
 
           def call(params)
             token, secret = retrieve_access_token(params)
-            TrelloConnectionWasSuccessful.call(
-              user_uuid: user_uuid,
+            @event_successful.call(
+              user_uuid: session[:user_uuid] || SecureRandom.uuid,
               access_token: token,
               access_token_secret: secret
             )
@@ -24,11 +31,17 @@ module Web::Controllers
           private
 
           # From the callback, we fetch the OAuth access token. We retrieve the
-          # request token and secret we saved in the session (aka store), rebuild
+          # request token and secret we saved in the session, rebuild
           # an `Oauth::RequestToken` instance and get the access token.
           def retrieve_access_token(params)
-            request_token = oauth_request_token_class.new(consumer, store[:request_token], store[:request_token_secret])
-            fetched_access_token = request_token.get_access_token oauth_verifier: params[:oauth_verifier]
+            request_token = @oauth_request_token_class.new(
+              @oauth_consumer,
+              session[:integrations][:trello][:request_token],
+              session[:integrations][:trello][:request_token_secret]
+            )
+            fetched_access_token = request_token.get_access_token(
+              oauth_verifier: params[:oauth_verifier]
+            )
             clean_session
             [fetched_access_token.token, fetched_access_token.secret]
           end

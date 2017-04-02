@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require "persistence/repository"
+require 'persistence/repository'
 module Letto
   module Persistence
 
@@ -8,7 +8,7 @@ module Letto
 
       def self.create(username:, trello_access_token:, trello_access_token_secret:, session_id:)
         insert(
-          uuid: generate_uuid,
+          id: generate_id,
           username: username,
           trello_access_token: trello_access_token,
           trello_access_token_secret: trello_access_token_secret,
@@ -22,17 +22,9 @@ module Letto
         user
       end
 
-      def self.update_by_uuid(uuid:, trello_access_token: nil, trello_access_token_secret: nil, force_nil: false)
-        values = {
-          trello_access_token: trello_access_token,
-          trello_access_token_secret: trello_access_token_secret
-        }
-        values.reject! { |_, v| v.nil? } unless force_nil
-        update_where({ uuid: uuid.to_s }, values)
-      end
 
-      def self.delete_by_uuid(uuid:)
-        delete(uuid: uuid.to_s)
+      def self.delete_by_id(id:)
+        delete(id: id.to_s)
       end
     end
   end

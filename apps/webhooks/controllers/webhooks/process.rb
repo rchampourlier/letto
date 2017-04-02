@@ -1,21 +1,17 @@
 # frozen_string_literal: true
+require_relative '../../../../lib/letto/events/webhook_received'
+
 module Webhooks::Controllers::Webhooks
+
+  # Process incoming webhook
   class Process
     include Webhooks::Action
 
     def call(params)
-      webhook = WebhookValue.with_request(
-        uuid: webhook_uuid,
-        request: request
-      )
-      EventTrain.publish(
-        event_name: :received_webhook,
-        event_data: {
-          user_uuid: user_uuid,
-          webhook_uuid: webhook.uuid,
-          webhook_headers: webhook.headers,
-          webhook_body: webhook.body
-        }
+      WebhookReceived.call(
+        id: params[:id],
+        user_uuid: params[:user_uuid],
+        params: params.to_h
       )
       self.body = { status: 'ok' }.to_json
     end

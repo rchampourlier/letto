@@ -19,7 +19,7 @@ describe TrelloConnectionWasSuccessful do
     {}
   end
 
-  let(:integration_record_repository_mock) do
+  let(:integration_repository_mock) do
     m = Minitest::Mock.new
     m.expect(:is_a?, false, [Proc])
     m.expect(:create_or_update, record) do |params|
@@ -34,13 +34,13 @@ describe TrelloConnectionWasSuccessful do
       user_uuid: 'user_uuid',
       access_token: 'access_token',
       access_token_secret: 'access_token_secret',
-      integration_record_repository: integration_record_repository_mock,
+      integration_repository: integration_repository_mock,
       trello_client_class: TrelloClientMock
     }
   end
 
-  it 'creates a new integration record' do
+  it 'creates or updates an integration record' do
     result
-    integration_record_repository_mock.verify
+    integration_repository_mock.verify
   end
 end

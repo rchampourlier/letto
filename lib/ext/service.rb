@@ -21,7 +21,7 @@ require_relative './types'
 #
 #     inject :dependency, proc { ExternalDependency.new }
 #
-# _NB: your param and injection names must not collide!_
+# _NB: your params and injection names must not collide!_
 #
 # When `call`ing or initializing the service, you may specify the
 # injected dependency:
@@ -90,7 +90,7 @@ class Service
 
   def initialize(params_and_injections = nil)
     params, init_injections = split_params_and_injections(params_and_injections)
-    @params = param_class.new(params)
+    @_params = param_class.new(params)
     apply_injections(init_injections)
   end
 
@@ -112,7 +112,7 @@ class Service
     raise TypeError, 'param name must be a Symbol' unless name.is_a?(Symbol)
     param_class.attribute(name, type)
     class_eval do
-      define_method(name) { params.send(name.to_sym) }
+      define_method(name) { _params.send(name.to_sym) }
     end
   end
 
@@ -129,18 +129,18 @@ class Service
   # the service is initialized or called.
   def self.inject(name, injection)
     raise(TypeError, 'injection name must be a Symbol') unless name.is_a?(Symbol)
-    injections[name] = injection
+    _injections[name] = injection
     class_eval do
       define_method(name) do
-        injection = injections[name]
+        injection = _injections[name]
         return injection unless injection.is_a?(Proc)
         injection.call
       end
     end
   end
 
-  def self.injections
-    @injections ||= {}
+  def self._injections
+    @_injections ||= {}
   end
 
   def self.logging_enabled
@@ -166,8 +166,8 @@ class Service
 
   private
 
-  attr_reader :params
-  attr_accessor :injections
+  attr_reader :_params
+  attr_accessor :_injections
 
   def before_call
     @time_start = Time.now
@@ -185,7 +185,7 @@ class Service
   def split_params_and_injections(params_and_injections)
     return nil if params_and_injections.nil?
     r = params_and_injections.partition do |k, _v|
-      !self.class.injections.include?(k)
+      !self.class._injections.include?(k)
     end
     r.map { |i| Hash[i] }
   end
@@ -193,10 +193,10 @@ class Service
   # Apply the specified injections to the object by merging the
   # default values with the specified ones.
   def apply_injections(init_injections)
-    self.injections = {}.merge(self.class.injections)
+    self._injections = {}.merge(self.class._injections)
     return if init_injections.nil?
     init_injections.each do |k, v|
-      injections[k] = v
+      _injections[k] = v
     end
   end
 

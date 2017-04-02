@@ -14,7 +14,7 @@ describe Letto::Workflows::Function::ApiCall do
     }
   end
   let(:context) { { "user_uuid" => user_uuid } }
-  let(:user_uuid) { "some-user-uuid" }
+  let(:user_uuid) { "some-user-id" }
   let(:due_date) { "2016-12-01 12:00:01" }
 
   subject do

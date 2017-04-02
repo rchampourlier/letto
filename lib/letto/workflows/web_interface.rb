@@ -1,7 +1,5 @@
 # frozen_string_literal: true
-require "persistence/user_repository"
-require "persistence/workflow_repository"
-require "workflows"
+require_relative '../workflows'
 
 module Letto
   module Workflows
@@ -15,14 +13,14 @@ module Letto
 
         def create_or_update_workflow(user:, params:)
           begin
-            workflow_data = JSON.parse(params["workflow_data"])
+            workflow_data = JSON.parse(params['workflow_data'])
             workflow = Workflows.build(data: workflow_data)
-            uuid = params[:uuid]
-            if uuid
-              Persistence::WorkflowRepository.update_by_uuid(uuid: uuid, data: JSON.dump(workflow_data))
+            id = params[:id]
+            if id
+              Persistence::WorkflowRepository.update_by_id(id: id, data: JSON.dump(workflow_data))
             else
-              uuid = Persistence::WorkflowRepository.create(
-                user_uuid: user[:uuid],
+              id = Persistence::WorkflowRepository.create(
+                user_uuid: user[:id],
                 data: JSON.dump(workflow_data)
               )
             end
@@ -32,21 +30,21 @@ module Letto
             data = JSON.pretty_generate(workflow_data)
           rescue JSON::ParserError => e
             err_message = "Invalid JSON: #{e.message}"
-            data = params["data"]
+            data = params['data']
           end
           if successful
-            flash[:success] = "Workflow \"#{workflow_data['name']}\" saved with id #{uuid}"
-            redirect "/workflows/#{uuid}"
+            flash[:success] = "Workflow \"#{workflow_data['name']}\" saved with id #{id}"
+            redirect "/workflows/#{id}"
           else
-            render_workflows(selected_data: data, flash_messages: { danger: err_message }, user_uuid: user[:uuid])
+            render_workflows(selected_data: data, flash_messages: { danger: err_message }, user_uuid: user[:id])
           end
         end
 
-        def render_workflows(selected_data: nil, selected_uuid: nil, user_uuid:, flash_messages: {})
+        def render_workflows(selected_data: nil, selected_id: nil, user_uuid:, flash_messages: {})
           flash_messages&.each { |k, v| flash.now[k] = v }
           @workflows = Persistence::WorkflowRepository.for_user_uuid(user_uuid)
           @selected_workflow_data = selected_data
-          @selected_workflow_uuid = selected_uuid
+          @selected_workflow_id = selected_id
           erb :workflows
         end
 
@@ -58,35 +56,35 @@ module Letto
       def self.registered(app)
 
         # INDEX, NEW
-        app.get "" do
-          render_workflows(user_uuid: user[:uuid])
+        app.get ''do
+          render_workflows(user_uuid: user[:id])
         end
 
         # SHOW, EDIT
-        app.get "/:uuid" do
-          selected_workflow = Persistence::WorkflowRepository.for_uuid(params[:uuid])
+        app.get '/:id' do
+          selected_workflow = Persistence::WorkflowRepository.for_id(params[:id])
           render_workflows(
             selected_data: beautify_json(selected_workflow[:data]),
-            selected_uuid: selected_workflow[:uuid],
-            user_uuid: user[:uuid]
+            selected_id: selected_workflow[:id],
+            user_uuid: user[:id]
           )
         end
 
         # CREATE
-        app.post "" do
+        app.post ''do
           create_or_update_workflow(user: user, params: params)
         end
 
         # UPDATE
-        app.put "/:uuid" do
+        app.put '/:id' do
           create_or_update_workflow(user: user, params: params)
         end
 
         # DELETE
-        app.delete "/:uuid" do
-          uuid = params[:uuid]
-          Persistence::WorkflowRepository.delete_by_uuid(uuid: uuid)
-          redirect("/workflows")
+        app.delete '/:id' do
+          id = params[:id]
+          Persistence::WorkflowRepository.delete_by_id(id: id)
+          redirect('/workflows')
         end
       end
     end

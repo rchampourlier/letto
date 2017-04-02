@@ -7,13 +7,13 @@ module Letto
     class WorkflowRepository < Repository
 
       def self.create(user_uuid:, data:)
-        uuid = generate_uuid
+        id = generate_uuid
         insert(
-          uuid: uuid,
+          id: id,
           user_uuid: user_uuid,
           data: data
         )
-        uuid
+        id
       end
 
       def self.for_user_uuid(user_uuid)
@@ -21,18 +21,18 @@ module Letto
         where(user_uuid: user_uuid.to_s)
       end
 
-      def self.for_uuid(uuid)
-        return nil if uuid.nil?
-        first_where(uuid: uuid.to_s)
+      def self.for_id(id)
+        return nil if id.nil?
+        first_where(id: id.to_s)
       end
 
-      def self.update_by_uuid(uuid:, data:)
+      def self.update_by_id(id:, data:)
         values = { data: data }.reject { |_, v| v.nil? }
-        update_where({ uuid: uuid.to_s }, values)
+        update_where({ id: id.to_s }, values)
       end
 
-      def self.delete_by_uuid(uuid:)
-        delete(uuid: uuid.to_s)
+      def self.delete_by_id(id:)
+        delete(id: id.to_s)
       end
     end
   end

@@ -22,7 +22,7 @@ module Letto
         trello_access_token = user[:trello_access_token]
         trello_access_token_secret = user[:trello_access_token_secret]
         if trello_access_token.nil? || trello_access_token_secret.nil?
-          raise "No trello_access_token for user with uuid `#{user[:uuid]}`"
+          raise "No trello_access_token for user with id `#{user[:id]}`"
         end
         Client.new(trello_access_token, trello_access_token_secret)
       end

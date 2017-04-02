@@ -7,11 +7,11 @@ describe "Letto::Persistence::UserRepository" do
 
   describe "create" do
     it "calls insert with specified arguments" do
-      allow(Letto::Persistence::Repository).to receive(:generate_uuid).and_return("1")
+      allow(Letto::Persistence::Repository).to receive(:generate_id).and_return("1")
       expect(Letto::Persistence::Repository).
         to receive(:insert).
         with(
-          uuid: "1",
+          id: "1",
           username: "me",
           trello_access_token: "trello_access_token",
           trello_access_token_secret: "trello_access_token_secret",
@@ -35,22 +35,22 @@ describe "Letto::Persistence::UserRepository" do
     end
   end
 
-  describe "update_by_uuid(uuid:, access_token: nil, access_token_secret: nil)" do
+  describe "update_by_id(id:, access_token: nil, access_token_secret: nil)" do
 
     it "updates the specified attributes" do
       expect(Letto::Persistence::Repository).
         to receive(:update_where).
-        with({ uuid: "1" }, trello_access_token: "new")
-      Letto::Persistence::UserRepository.update_by_uuid(uuid: "1", trello_access_token: "new")
+        with({ id: "1" }, trello_access_token: "new")
+      Letto::Persistence::UserRepository.update_by_id(id: "1", trello_access_token: "new")
     end
   end
 
-  describe "delete_by_uuid(uuid:)" do
-    it "calls delete with uuid" do
+  describe "delete_by_id(id:)" do
+    it "calls delete with id" do
       expect(Letto::Persistence::Repository).
         to receive(:delete).
-        with(uuid: "1")
-      Letto::Persistence::UserRepository.delete_by_uuid(uuid: "1")
+        with(id: "1")
+      Letto::Persistence::UserRepository.delete_by_id(id: "1")
     end
   end
 end

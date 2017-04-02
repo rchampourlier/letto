@@ -21,17 +21,17 @@
           <% unless @workflows.empty? %>
           <table style="width:100%" class="workflows_list">
             <% @workflows.each do | workflow | %>
-            <% uuid = workflow[:uuid] %>
+            <% id = workflow[:id] %>
             <% parsed_data = JSON.parse(workflow[:data]) %>
             <tr class="workflows_list--row">
               <td><%= parsed_data['name'] %></td>
               <td>
-                <form action="/workflows/<%= uuid %>" method="get">
-                  <input type="submit" value="Display" <% if @selected_workflow_uuid == uuid %>disabled<%end%> />
+                <form action="/workflows/<%= id %>" method="get">
+                  <input type="submit" value="Display" <% if @selected_workflow_id == id %>disabled<%end%> />
                 </form>
               </td>
               <td>
-                <form action="/workflows/<%= uuid %>" method="post">
+                <form action="/workflows/<%= id %>" method="post">
                   <input type="hidden" name="_method" value="delete" />
                   <input type="submit" value="Delete" />
                 </form>
@@ -48,8 +48,8 @@
           </form>
         </td>
         <td width="70%">
-          <% if @selected_workflow_uuid %>
-            <form action="/workflows/<%= @selected_workflow_uuid %>" method="post">
+          <% if @selected_workflow_id %>
+            <form action="/workflows/<%= @selected_workflow_id %>" method="post">
               <input type="hidden" name="_method" value="put" />
               <textarea name="workflow_data" style="width:100%" rows="30"><%= @selected_workflow_data %></textarea>
               <br />

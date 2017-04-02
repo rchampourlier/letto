@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require "workflows/node"
+require_relative '../node'
 
 module Letto
   module Workflows
@@ -15,7 +15,7 @@ module Letto
     # Depending on the `value_type`, the `value` may take different
     # forms:
     #   - `value`:
-    #     - static: e.g. a numeric (2), a string ("something"),
+    #     - static: e.g. a numeric (2), a string ('something'),
     #     - dynamic: e.g. an expression to be evaluated against the
     #       context, like `{{ context.path.to.value }}`
     #   - `array` or `hash`, where each item or value is itself
@@ -23,14 +23,15 @@ module Letto
     #
     # TODO: rename `value_type` to `expression_type`
     class ExpressionNode < Node
-      ERR_MSG_VALUE_TYPE_MISSING = "Expression nodes must have a `value_type` (%s)"
-      ERR_MSG_VALUE_TYPE_INVALID = "`value_type` is not valid, should be one of \"value\", \"array\" or \"hash\" (%s)"
-      ERR_MSG_VALUE_MISSING = "Expression nodes must have a `value` attribute (%s)"
-      ERR_MSG_VALUE_INVALID_NOT_ARRAY = "`value` for an expression node with \"array\" `value_type` must be an array (%s)"
-      ERR_MSG_VALUE_INVALID_NOT_HASH = "`value` for an expression node with \"hash\" `value_type` must be an hash (%s)"
-      ERR_MSG_NESTED_EXPRESSIONS_INVALID = "Nested expressions are not valid (%s)"
+      ERR_MSG_VALUE_TYPE_MISSING = 'Expression nodes must have a `value_type` (%s)'
+      ERR_MSG_VALUE_TYPE_INVALID = '`value_type` is not valid, should be one of \"value\", \"array\" or \"hash\" (%s)'
+      ERR_MSG_VALUE_MISSING = 'Expression nodes must have a `value` attribute (%s)'
+      ERR_MSG_VALUE_INVALID_NOT_ARRAY = \
+        '`value` for an expression node with \"array\" `value_type` must be an array (%s)'
+      ERR_MSG_VALUE_INVALID_NOT_HASH = '`value` for an expression node with \"hash\" `value_type` must be an hash (%s)'
+      ERR_MSG_NESTED_EXPRESSIONS_INVALID = 'Nested expressions are not valid (%s)'
       ERR_MSG_VALUE_INVALID_FOR_VALUE_TYPE = \
-        "Value for a \"value\" `value_type` must be Numeric or String (%s)"
+        'Value for a \"value\" `value_type` must be Numeric or String (%s)'
 
       SUPPORTED_VALUE_TYPES = %w(value array hash).freeze
 
@@ -89,7 +90,7 @@ module Letto
       end
 
       def evaluate_value(context:)
-        value = data["value"]
+        value = data['value']
         return value unless value.is_a?(String)
 
         re = /{{(.*)}}/
@@ -97,30 +98,30 @@ module Letto
         return value unless expression
 
         expression = expression.strip
-        evaluated_expression = context.dig(*expression.split("."))
+        evaluated_expression = context.dig(*expression.split('.'))
         value.gsub(re, evaluated_expression)
       end
 
       def evaluate_array(context:)
-        value = data["value"]
+        value = data['value']
         value.map do |item|
           ExpressionNode.new(data: item).evaluate(context: context)
         end
       end
 
       def evaluate_hash(context:)
-        value = data["value"]
+        value = data['value']
         value.each_with_object({}) do |(k, v), hash|
           hash[k] = ExpressionNode.new(data: v).evaluate(context: context)
         end
       end
 
       def value
-        data["value"]
+        data['value']
       end
 
       def value_type
-        data["value_type"]
+        data['value_type']
       end
     end
   end

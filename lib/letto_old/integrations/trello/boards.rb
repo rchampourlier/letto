@@ -41,7 +41,7 @@ module Letto
           def create_webhook(board_id:, description:)
             url = IncomingWebhooks.create(
               integration: "trello",
-              user_uuid: user[:uuid],
+              user_uuid: user[:id],
               context: { board_id: board_id }
             )
             Trello.client(user: user).create_board_webhook(

@@ -1,5 +1,5 @@
 require 'spec_helper'
 
-describe IntegrationRecord do
+describe Integration do
   # place your tests here
 end

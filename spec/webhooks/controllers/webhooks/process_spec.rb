@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 require 'spec_helper'
 require_relative '../../../../apps/webhooks/controllers/webhooks/process'
 
 describe Webhooks::Controllers::Webhooks::Process do
   let(:action) { Webhooks::Controllers::Webhooks::Process.new }
-  let(:params) { Hash[] }
+  let(:params) { Hash[id: 'webhook-id', user_uuid: 'user-id'] }
 
   it 'is successful' do
     response = action.call(params)

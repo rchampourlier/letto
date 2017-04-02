@@ -5,24 +5,19 @@
     <title>Letto | Home</title>
   </head>
   <body>
-      <% if @user %>
-        Trello :
+      <% if @user_uuid %>
+        Congratulations, you're connected with UUID <%= @user_uuid %>!
+      <% end %>
+      <% if @trello_connected_username %>
+        You're connected to Trello <%= @trello_connected_username %>.
         <ul>
-        <% if @user[:trello_access_token] %>
-          <li>You're connected to Trello (username: <%= @username %>)</li>
           <li><a href="/trello/boards">Boards</a></li>
           <li><a href="/trello/webhooks">Webhooks</a></li>
           <li><a href="/trello/connection/destroy">Disconnect from Trello</a></li>
-        <% else %>
-          <li>You must <a href="<%= routes.trello_connection_initialize_path %>">connect to Trello</a> first</li>
-        <% end %>
         </ul>
-        <a href="/workflows">Configure Workflows</a>
       <% else %>
-        You must connect:
-        <ul>
-          <li><a href="<%= routes.trello_connection_initialize_path %>">connect to Trello</a></li>
-        </ul>
+        You must <a href="<%= routes.trello_connection_initialize_path %>">connect to Trello</a> first.
       <% end %>
+      <a href="/workflows">Configure Workflows</a>
   </body>
 </html>

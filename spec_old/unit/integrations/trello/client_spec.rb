@@ -81,7 +81,7 @@
 #
 #   describe "create_board_webhook(board_id, callback_url, description)" do
 #     it "performs the create call through Trello::Client" do
-#       allow(SecureRandom).to receive(:uuid).and_return("webhook_id")
+#       allow(SecureRandom).to receive(:id).and_return("webhook_id")
 #       expect(client).to receive(:create).with(
 #         :webhook,
 #         "description" => "description",

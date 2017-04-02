@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require "workflows/function"
+require_relative '../function'
 
 module Letto
   module Workflows

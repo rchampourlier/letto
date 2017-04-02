@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require "workflows/function"
+require_relative '../function'
 
 module Letto
   module Workflows
@@ -11,7 +11,7 @@ module Letto
 
         def run_after
           Integrations::Trello.perform_api_call(
-            user_uuid: context["user_uuid"],
+            user_uuid: context['user_uuid'],
             verb: verb,
             target: target,
             payload: payload

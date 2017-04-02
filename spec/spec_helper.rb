@@ -7,6 +7,6 @@ require_relative './support/helpers'
 
 require 'minitest/autorun'
 require 'minitest/reporters'
-Minitest::Reporters.use! [Minitest::Reporters::DefaultReporter.new(color: true)]
+Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new(color: true)]
 
 Hanami.boot

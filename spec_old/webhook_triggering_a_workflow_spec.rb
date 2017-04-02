@@ -39,11 +39,11 @@ describe "webhook triggering a workflow" do
     allow(Logger).to receive(:new).and_return(logger)
     expect(logger).to receive(:info).with(message)
     body = { payload: { value: message } }.to_json
-    post "/incoming_webhook/user_uuid/webhook_uuid", body
+    post "/incoming_webhook/user_uuid/webhook_id", body
   end
 
   it "only executes the correct workflow" do
     expect(Letto::Workflows::Node).to receive(:build).once
-    post "/incoming_webhook/user_uuid/webhook_uuid", body
+    post "/incoming_webhook/user_uuid/webhook_id", body
   end
 end

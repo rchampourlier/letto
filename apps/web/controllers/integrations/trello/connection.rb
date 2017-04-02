@@ -2,6 +2,8 @@
 module Web::Controllers
   module Integrations
     module Trello
+
+      # Top-module for connection actions
       module Connection
 
         TRELLO_OAUTH_CONFIG = {
@@ -17,26 +19,12 @@ module Web::Controllers
           scope: 'read,write'
         }.freeze
 
-        # Methods shared by Trello::Connection action classes.
-        module SharedMethods
-
-          protected
-
-          def store
-            session[:integrations][:trello]
-          end
-
-          def consumer
-            @consumer ||= oauth_consumer_class.new(
-              ENV['TRELLO_CONSUMER_KEY'],
-              ENV['TRELLO_CONSUMER_SECRET'],
-              TRELLO_OAUTH_CONFIG
-            )
-          end
-
-          def user_uuid
-            session[:user_uuid] ||= SecureRandom.uuid
-          end
+        def self.oauth_consumer
+          Letto.dep('oauth_consumer_class').new(
+            ENV['TRELLO_CONSUMER_KEY'],
+            ENV['TRELLO_CONSUMER_SECRET'],
+            TRELLO_OAUTH_CONFIG
+          )
         end
       end
     end

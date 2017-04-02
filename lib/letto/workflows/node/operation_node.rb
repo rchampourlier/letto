@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require "workflows/node"
+require_relative '../node'
 
 module Letto
   module Workflows
@@ -8,11 +8,11 @@ module Letto
     # is defined by a function and an array of arguments. The available
     # functions are defined in workflows/functions.
     class OperationNode < Node
-      ERR_MSG_FUNCTION_MISSING = "Operation node must have a function (%s)"
-      ERR_MSG_FUNCTION_UNKNOWN = "Function \"%s\" is unknown (%s)"
-      ERR_MSG_ARGUMENTS_MISSING = "Operation node must have arguments (%s)"
-      ERR_MSG_ARGUMENTS_NOT_HASH = "Operation node arguments must be an hash (%s)"
-      ERR_MSG_FUNCTION_RUNTIME_FAILURE = "Function runtime failure (%s)"
+      ERR_MSG_FUNCTION_MISSING = 'Operation node must have a function (%s)'
+      ERR_MSG_FUNCTION_UNKNOWN = 'Function \"%s\" is unknown (%s)'
+      ERR_MSG_ARGUMENTS_MISSING = 'Operation node must have arguments (%s)'
+      ERR_MSG_ARGUMENTS_NOT_HASH = 'Operation node arguments must be an hash (%s)'
+      ERR_MSG_FUNCTION_RUNTIME_FAILURE = 'Function runtime failure (%s)'
 
       # TODO: discover using introspection instead
       SUPPORTED_FUNCTION_NAMES = %w(
@@ -76,11 +76,11 @@ module Letto
       end
 
       def function_name
-        data["function"]
+        data['function']
       end
 
       def arguments
-        data["arguments"]
+        data['arguments']
       end
     end
   end

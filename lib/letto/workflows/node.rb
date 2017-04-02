@@ -1,6 +1,6 @@
 # frozen_string_literal: true
-require "active_support/inflector"
-require "workflows"
+require 'active_support/inflector'
+require_relative '../workflows'
 
 module Letto
   module Workflows
@@ -23,18 +23,18 @@ module Letto
     #
     # TODO: nodes may have a type attribute for value casting
     class Node
-      ERR_MSG_TYPE_UNKNOWN = "the node type \"%s\" is unknown"
-      ERR_MSG_TYPE_DOES_NOT_MATCH = "type \"%s\" does not match class %s"
-      ERR_MSG_DATA_INVALID_MUST_BE_HASH = "a node must be an hash (%s)"
-      ERR_MSG_DATA_INVALID_MISSING_TYPE = "a node must have a `type` attribute (%s)"
+      ERR_MSG_TYPE_UNKNOWN = 'the node type "%s" is unknown'
+      ERR_MSG_TYPE_DOES_NOT_MATCH = 'type "%s" does not match class %s'
+      ERR_MSG_DATA_INVALID_MUST_BE_HASH = 'a node must be an hash (%s)'
+      ERR_MSG_DATA_INVALID_MISSING_TYPE = 'a node must have a `type` attribute (%s)'
 
       # Build a node according to the specified data. Prior to
       # returning a node instance, it will check that the provided
       # data is valid.
-      # The data["type"] attribute is used to build the appropriate
+      # The data['type'] attribute is used to build the appropriate
       # type of node.
       def self.build(data:)
-        type = data["type"]
+        type = data['type']
         raise(Error, format(ERR_MSG_DATA_INVALID_MISSING_TYPE, data)) if type.nil?
         begin
           node_class = Workflows.const_get("#{type.camelize}Node")
@@ -48,7 +48,7 @@ module Letto
       # Will only load once.
       def self.load_node_classes
         return if @node_classes_loaded
-        Dir[File.expand_path("../node/*.rb", __FILE__)].each { |f| require f }
+        Dir[File.expand_path('../node/*.rb', __FILE__)].each { |f| require f }
         @node_classes_loaded = true
       end
 
@@ -66,13 +66,13 @@ module Letto
       # TODO: rewrite using hooks as advised by Sandi Metz
       # in POODR (raising from the superclass is a smell).
       def evaluate(context:)
-        raise "Must be implemented by subclass"
+        raise 'Must be implemented by subclass'
       end
 
       # TODO: rewrite using hooks as advised by Sandi Metz
       # in POODR (raising from the superclass is a smell).
       def check!
-        raise "Must be implemented by subclass"
+        raise 'Must be implemented by subclass'
       end
 
       private
@@ -93,7 +93,7 @@ module Letto
       end
 
       def check_matching_type!
-        type_from_class = self.class.name.underscore.split("/").last.sub(/_node\z/, "")
+        type_from_class = self.class.name.underscore.split('/').last.sub(/_node\z/, '')
         return unless type != type_from_class
         raise(Error, format(ERR_MSG_TYPE_DOES_NOT_MATCH, type, self.class.name))
       end
@@ -113,7 +113,7 @@ module Letto
       end
 
       def type
-        data["type"]
+        data['type']
       end
     end
   end

@@ -8,10 +8,6 @@ module Letto
     # methods.
     class Repository
 
-      def self.generate_uuid
-        SecureRandom.uuid
-      end
-
       def self.row(data, time = nil)
         time ||= Time.now
         data.merge(

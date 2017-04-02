@@ -12,7 +12,9 @@ describe 'Integrations > Trello > As an user I connect through Trello' do
     it 'redirection to authorize URL' do
       visit '/'
       click_link('connect to Trello')
-      page.current_path.must_equal('/authorize_url?params=params')
+      page.current_url.must_equal(
+        'http://www.example.com/integrations/trello/connection/authorize_url?params=params'
+      )
     end
   end
 

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require_relative '../repositories/integration_record_repository'
+require_relative '../repositories/integration_repository'
 
 # A domain event happening when a Trello connection is
 # successful.
@@ -7,18 +7,19 @@ class TrelloConnectionWasSuccessful < Letto::Event
   param :user_uuid, Types::Strict::String
   param :access_token, Types::Strict::String
   param :access_token_secret, Types::Strict::String
-  inject :integration_record_repository, proc { IntegrationRecordRepository.new }
+  inject :integration_repository, proc { IntegrationRepository.new }
   inject :trello_client_class, Letto.dep(:trello_client_class)
   log_with Letto.dep(:logger)
 
   def perform_call
-    create_or_update_trello_integration_record
+    create_or_update_trello_integration
   end
 
   private
 
-  def create_or_update_trello_integration_record
-    integration_record_repository.create_or_update(
+  def create_or_update_trello_integration
+    integration_repository.create_or_update(
+      type: 'trello',
       user_uuid: user_uuid,
       data: {
         username: username,

@@ -21,7 +21,6 @@ gem 'ruby-trello'
 # Patterns
 gem 'dry-struct'
 gem 'dry-system'
-gem 'event_train', '~> 0.2.1'
 
 group :development do
   # Code reloading

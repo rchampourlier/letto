@@ -46,7 +46,6 @@ class TrelloClient
 
   # @return [String] Trello create webhook's id
   def create_board_webhook(board_id, callback_url, description)
-    webhook_id = SecureRandom.uuid
     create(
       :webhook,
       'description' => description,

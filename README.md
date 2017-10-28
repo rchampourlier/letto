@@ -5,6 +5,17 @@
 [![Test Coverage](https://codeclimate.com/github/rchampourlier/letto/badges/coverage.svg)](https://codeclimate.com/github/rchampourlier/letto/coverage)
 [![Issue Count](https://codeclimate.com/github/rchampourlier/letto/badges/issue_count.svg)](https://codeclimate.com/github/rchampourlier/letto)
 
+## Status
+
+**This project has been abandoned.**
+
+I finally abandoned this project, considering the approach I took too complicated and not focusing on adding real value. So I reviewed the project's objectives and decided to start over.
+
+The new project is now [letto_go](https://github.com/rchampourlier/letto_go).
+
+- It is developed in Go. It better fits my current development rhythm, since it makes refactoring easier even when you don't work on the project every day.
+- It focuses on making it effortless for a developer to deploy an automation workflow using his.her usual tools (known languages), instead of providing a different way of building the workflow (a new abstration described using JSON as this version of Letto was providing).
+
 ## Purpose
 
 LET's auTOmate!
